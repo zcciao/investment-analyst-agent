@@ -67,12 +67,24 @@ async def root() -> FileResponse:
 
 @app.get("/health")
 async def health() -> dict:
-    return {"ok": True, "model": os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")}
+    provider = os.getenv("PROVIDER", "gemini").lower()
+    if provider == "gemini":
+        model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+    else:
+        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+    return {"ok": True, "provider": provider, "model": model}
 
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
-    if not os.getenv("ANTHROPIC_API_KEY"):
+    provider = os.getenv("PROVIDER", "gemini").lower()
+    if provider == "gemini":
+        if not os.getenv("GOOGLE_API_KEY"):
+            raise HTTPException(
+                status_code=400,
+                detail="GOOGLE_API_KEY is not set. Copy .env.example to .env and fill it in.",
+            )
+    elif not os.getenv("ANTHROPIC_API_KEY"):
         raise HTTPException(
             status_code=400,
             detail="ANTHROPIC_API_KEY is not set. Copy .env.example to .env and fill it in.",

@@ -27,6 +27,7 @@ from typing import Literal
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import SystemMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
@@ -40,8 +41,12 @@ _CHECKPOINTER = MemorySaver()
 
 
 def _build_llm():
-    model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+    provider = os.getenv("PROVIDER", "gemini").lower()
     # temperature=0 keeps numeric reasoning stable; bump for brainstorming nodes.
+    if provider == "gemini":
+        model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+        return ChatGoogleGenerativeAI(model=model, temperature=0).bind_tools(ALL_TOOLS)
+    model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
     return ChatAnthropic(model=model, temperature=0).bind_tools(ALL_TOOLS)
 
 

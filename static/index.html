@@ -89,7 +89,7 @@
 
 <header>
   <h1>Investment Analyst</h1>
-  <span class="sub">PoC · LangGraph · Claude</span>
+  <span class="sub" id="model-info">PoC · LangGraph · …</span>
   <button id="reset" title="Start a new conversation">New thread</button>
 </header>
 
@@ -108,6 +108,13 @@
 </form>
 
 <script>
+  // ---------- model info ----------
+  fetch("/health").then(r => r.json()).then(info => {
+    const label = info.provider === "gemini" ? "Gemini" : "Claude";
+    document.getElementById("model-info").textContent =
+      `PoC · LangGraph · ${label} (${info.model})`;
+  }).catch(() => {});
+
   // ---------- session / thread management ----------
   const THREAD_KEY = "ia.thread_id";
   function newThreadId() { return crypto.randomUUID(); }
