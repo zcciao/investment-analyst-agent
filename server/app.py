@@ -77,19 +77,14 @@ async def health() -> dict:
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
-    provider = os.getenv("PROVIDER", "gemini").lower()
+    provider = os.getenv("PROVIDER", "anthropic").lower()
     if provider == "gemini":
         if not os.getenv("GOOGLE_API_KEY"):
-            raise HTTPException(
-                status_code=400,
-                detail="GOOGLE_API_KEY is not set. Copy .env.example to .env and fill it in.",
-            )
-    elif not os.getenv("ANTHROPIC_API_KEY"):
-        raise HTTPException(
-            status_code=400,
-            detail="ANTHROPIC_API_KEY is not set. Copy .env.example to .env and fill it in.",
-        )
-    return EventSourceResponse(_stream_turn(req))
+            raise HTTPException(status_code=400, detail="GOOGLE_API_KEY is not set.")
+    else:
+        if not os.getenv("ANTHROPIC_API_KEY"):
+            raise HTTPException(status_code=400, detail="ANTHROPIC_API_KEY is not set.")
+    return EventSourceResponse(_stream_turn(req), sep="\n")
 
 
 # --------------------------------------------------------------------------- #
@@ -107,36 +102,44 @@ async def _stream_turn(req: ChatRequest) -> AsyncIterator[dict]:
     config = {"configurable": {"thread_id": req.thread_id}}
     inputs = {"messages": [HumanMessage(content=req.message)]}
 
+    log.info("[turn start] thread=%s message=%r", req.thread_id, req.message)
     try:
+        full_response: list[str] = []
         # `astream` with stream_mode="messages" gives us per-token AIMessageChunks
         # from the agent node, plus full ToolMessage objects from the tool node.
         async for chunk, metadata in graph.astream(
             inputs, config=config, stream_mode="messages"
         ):
             node = metadata.get("langgraph_node")
+            log.debug("[chunk] node=%s type=%s content=%r", node, type(chunk).__name__, getattr(chunk, "content", None))
 
             if isinstance(chunk, AIMessageChunk):
                 # Text deltas
                 if chunk.content:
                     text = _extract_text(chunk.content)
                     if text:
+                        full_response.append(text)
                         yield _sse("token", {"text": text})
                 # Tool calls — Anthropic streams these as chunks; only emit when
                 # we see the full call (chunk.tool_calls becomes non-empty on
                 # the final assembly chunk).
                 for tc in getattr(chunk, "tool_calls", []) or []:
                     if tc.get("name"):
+                        log.info("[tool_call] %s args=%r", tc["name"], tc.get("args", {}))
                         yield _sse(
                             "tool_call",
                             {"name": tc["name"], "args": tc.get("args", {})},
                         )
 
             elif isinstance(chunk, ToolMessage):
+                log.info("[tool_result] %s → %s", chunk.name, _truncate(chunk.content, 200))
                 yield _sse(
                     "tool_result",
                     {"name": chunk.name, "result": _truncate(chunk.content)},
                 )
 
+        assembled = "".join(full_response)
+        log.info("[turn done] response (%d chars): %s", len(assembled), assembled[:500] + ("…" if len(assembled) > 500 else ""))
         yield _sse("done", {})
 
     except Exception as e:  # noqa: BLE001

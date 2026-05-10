@@ -41,8 +41,7 @@ _CHECKPOINTER = MemorySaver()
 
 
 def _build_llm():
-    provider = os.getenv("PROVIDER", "gemini").lower()
-    # temperature=0 keeps numeric reasoning stable; bump for brainstorming nodes.
+    provider = os.getenv("PROVIDER", "anthropic").lower()
     if provider == "gemini":
         model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
         return ChatGoogleGenerativeAI(model=model, temperature=0).bind_tools(ALL_TOOLS)
