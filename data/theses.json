@@ -1,0 +1,46 @@
+{
+  "GOOG": {
+    "ticker": "GOOG",
+    "one_liner": "Search cash flow funds an AI lead that is widening, not narrowing.",
+    "direction": "long",
+    "conviction": 7,
+    "time_horizon": "12-24 months",
+    "pillars": [
+      {
+        "name": "Search remains the cash engine",
+        "current_value": "Search rev +12% YoY (placeholder — refresh from latest 10-Q)",
+        "threshold_break": "Search YoY growth <0% for 2 consecutive quarters",
+        "watch_signals": ["Alphabet earnings", "ChatGPT/Perplexity share-of-search studies"],
+        "status": "intact"
+      },
+      {
+        "name": "Cloud growth re-accelerates",
+        "current_value": "GCP rev growth 30%+ YoY (placeholder)",
+        "threshold_break": "<25% YoY for 2 consecutive quarters",
+        "watch_signals": ["Alphabet earnings", "Hyperscaler comparison reports"],
+        "status": "wobbling"
+      },
+      {
+        "name": "Gemini ships at AI frontier",
+        "current_value": "Gemini competitive on benchmarks vs GPT-5 / Claude 4",
+        "threshold_break": "Two model generations behind frontier for 6+ months",
+        "watch_signals": ["Model release announcements", "LMArena rankings"],
+        "status": "intact"
+      }
+    ],
+    "catalysts": [
+      {"name": "Q2 earnings", "expected_date": "2026-07-23"},
+      {"name": "Google I/O", "expected_date": "2026-05-14"}
+    ],
+    "exit_plan": {
+      "take_profit": "Trim 25% if conviction-implied price reached",
+      "thesis_break": "Exit if 2+ pillars break simultaneously",
+      "time_stop": "Re-evaluate fully at 24 months"
+    },
+    "source_material": "Self-authored, 2026-05-10",
+    "journal": [
+      "2026-05-10: Initial thesis seeded from one-pager."
+    ],
+    "last_updated": "2026-05-10T00:00:00"
+  }
+}
