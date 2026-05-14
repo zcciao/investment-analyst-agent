@@ -1,0 +1,24 @@
+[
+  {
+    "id": "622d86e7-41fa-4c9a-827c-eaf5ca7b4cad",
+    "ticker": "GOOG",
+    "pillar_name": "Search remains the cash engine",
+    "old_status": "intact",
+    "new_status": "wobbling",
+    "reasoning": "While there is no direct evidence of a decline in Search revenue, the competitive landscape is intensifying with Amazon unveiling an AI search overhaul to defend its dominance. This development, combined with ongoing AI-driven competition from Microsoft and Anthropic, increases the risk to Google's core search engine cash engine.",
+    "confidence": 7,
+    "created_at": "2026-05-14T05:00:06.782201+00:00",
+    "read": false
+  },
+  {
+    "id": "6fbb332e-db4c-48f2-a250-7ba9c585f938",
+    "ticker": "MU",
+    "pillar_name": "Valuation Discipline",
+    "old_status": "intact",
+    "new_status": "broken",
+    "reasoning": "The stock price has surged to $803.63, resulting in a market capitalization of over $906 billion, which implies a massive expansion in valuation multiples far beyond the original forward P/E of 7.53. Given the extreme price appreciation from a year low of $90.93, the forward P/E is almost certainly well above the 15x threshold break condition.",
+    "confidence": 9,
+    "created_at": "2026-05-14T05:00:16.300022+00:00",
+    "read": false
+  }
+]

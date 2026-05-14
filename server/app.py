@@ -20,6 +20,7 @@ Threads / sessions:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -35,6 +36,16 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from agent.graph import get_graph
+from contextlib import asynccontextmanager
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+
+from agent.thesis_builder import get_thesis_build_graph
+from agent.thesis_store import Thesis, list_theses, upsert_thesis
+from pydantic import ValidationError as PydanticValidationError
+from watcher.alerts import list_alerts, mark_read, unread_count
+from watcher.engine import run_watcher
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -43,7 +54,25 @@ log = logging.getLogger("server")
 ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = ROOT / "static"
 
-app = FastAPI(title="Investment Analyst PoC")
+_scheduler = AsyncIOScheduler()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    watcher_hour = int(os.getenv("WATCHER_HOUR", "7"))
+    _scheduler.add_job(
+        run_watcher,
+        CronTrigger(hour=watcher_hour, minute=0),
+        id="daily_watcher",
+        replace_existing=True,
+    )
+    _scheduler.start()
+    log.info("[scheduler] watcher scheduled daily at %02d:00", watcher_hour)
+    yield
+    _scheduler.shutdown(wait=False)
+
+
+app = FastAPI(title="Investment Analyst PoC", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
@@ -54,6 +83,16 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 class ChatRequest(BaseModel):
     thread_id: str
     message: str
+
+
+class ThesisBuildRequest(BaseModel):
+    ticker: str
+    purchase_price: float
+    current_note: str
+
+
+class ThesisSaveRequest(BaseModel):
+    thesis: dict
 
 
 # --------------------------------------------------------------------------- #
@@ -85,6 +124,85 @@ async def chat(req: ChatRequest):
         if not os.getenv("ANTHROPIC_API_KEY"):
             raise HTTPException(status_code=400, detail="ANTHROPIC_API_KEY is not set.")
     return EventSourceResponse(_stream_turn(req), sep="\n")
+
+
+@app.post("/thesis/build")
+async def thesis_build(req: ThesisBuildRequest):
+    return EventSourceResponse(_stream_thesis_build(req), sep="\n")
+
+
+@app.post("/thesis/save")
+async def thesis_save(req: ThesisSaveRequest) -> dict:
+    try:
+        t = Thesis(**req.thesis)
+    except PydanticValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    upsert_thesis(t)
+    log.info("[thesis saved] %s", t.ticker)
+    return {"ok": True, "ticker": t.ticker}
+
+
+@app.get("/thesis/dashboard")
+async def thesis_dashboard() -> list[dict]:
+    """Return all theses enriched with live quotes and P&L performance."""
+    from agent.tools import get_stock_quote
+    theses = list_theses()
+    if not theses:
+        return []
+    quotes = await asyncio.gather(*[
+        asyncio.to_thread(get_stock_quote.func, ticker=t.ticker)
+        for t in theses
+    ])
+    result = []
+    for t, q in zip(theses, quotes):
+        current = q.get("last_price")
+        entry = t.entry_price
+        perf = None
+        if entry and current:
+            gain_abs = round(current - entry, 2)
+            gain_pct = round((gain_abs / entry) * 100, 1)
+            perf = {
+                "entry_price": entry,
+                "current_price": current,
+                "gain_abs": gain_abs,
+                "gain_pct": gain_pct,
+            }
+        result.append({
+            "thesis": t.model_dump(),
+            "quote": q,
+            "performance": perf,
+        })
+    return result
+
+
+# --------------------------------------------------------------------------- #
+# Watcher
+# --------------------------------------------------------------------------- #
+
+@app.post("/watcher/run")
+async def watcher_run() -> dict:
+    """Trigger a watcher run immediately. Returns a summary."""
+    return await run_watcher()
+
+
+@app.get("/watcher/alerts")
+async def watcher_alerts(unread_only: bool = False) -> list[dict]:
+    return [a.model_dump() for a in list_alerts(unread_only=unread_only)]
+
+
+@app.get("/watcher/alerts/count")
+async def watcher_alerts_count() -> dict:
+    return {"unread": unread_count()}
+
+
+class MarkReadRequest(BaseModel):
+    ids: list[str] | None = None  # None = mark all
+
+
+@app.post("/watcher/alerts/read")
+async def watcher_mark_read(req: MarkReadRequest) -> dict:
+    count = mark_read(req.ids)
+    return {"marked_read": count}
 
 
 # --------------------------------------------------------------------------- #
@@ -166,6 +284,71 @@ def _truncate(s, limit: int = 4000) -> str:
     """Keep tool-result payloads small enough for the wire."""
     s = s if isinstance(s, str) else json.dumps(s, default=str)
     return s if len(s) <= limit else s[:limit] + f"… [truncated, {len(s)} chars]"
+
+
+# --------------------------------------------------------------------------- #
+# Thesis builder streaming
+# --------------------------------------------------------------------------- #
+
+_THESIS_NODE_NAMES = {"draft_node", "research_node", "refine_node", "done_node"}
+_THESIS_NODE_STEP = {n: n.replace("_node", "") for n in _THESIS_NODE_NAMES}
+
+
+async def _stream_thesis_build(req: ThesisBuildRequest) -> AsyncIterator[dict]:
+    initial: dict = {
+        "ticker": req.ticker.upper(),
+        "purchase_price": req.purchase_price,
+        "current_note": req.current_note,
+        "draft": {}, "quote": {}, "company_info": {},
+        "financials": {}, "news": [], "web_snippets": [],
+        "thesis": {}, "error": None, "steps_completed": [],
+    }
+    graph = get_thesis_build_graph()
+    log.info("[thesis build] ticker=%s price=%s", initial["ticker"], req.purchase_price)
+    try:
+        async for event in graph.astream_events(initial, version="v2"):
+            ev_kind = event["event"]
+            ev_name = event.get("name", "")
+            if ev_name not in _THESIS_NODE_NAMES:
+                continue
+
+            step = _THESIS_NODE_STEP[ev_name]
+
+            if ev_kind == "on_chain_start":
+                yield _sse("step_start", {"step": step})
+
+            elif ev_kind == "on_chain_end":
+                output = event.get("data", {}).get("output", {}) or {}
+                if output.get("error"):
+                    yield _sse("error", {"message": output["error"]})
+                    yield _sse("done", {})
+                    return
+
+                yield _sse("step_done", {"step": step, "data": _wizard_summary(output, step)})
+
+                if step == "done" and output.get("thesis"):
+                    yield _sse("thesis_ready", {"thesis": output["thesis"]})
+
+        yield _sse("done", {})
+
+    except Exception as e:
+        log.exception("thesis build stream failed")
+        yield _sse("error", {"message": str(e)})
+        yield _sse("done", {})
+
+
+def _wizard_summary(output: dict, step: str) -> dict:
+    """Return a small UI-friendly payload for each step — avoid large blobs."""
+    if step == "draft":
+        return {"pillar_count": len(output.get("draft", {}).get("pillars", []))}
+    if step == "research":
+        price = output.get("quote", {}).get("last_price")
+        return {"price": price, "has_web": bool(output.get("web_snippets"))}
+    if step == "refine":
+        pillars = output.get("thesis", {}).get("pillars", [])
+        filled = sum(1 for p in pillars if p.get("current_value"))
+        return {"pillars_filled": filled, "total": len(pillars)}
+    return {}
 
 
 # --------------------------------------------------------------------------- #

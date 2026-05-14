@@ -59,6 +59,8 @@ class Thesis(BaseModel):
     direction: Direction = "long"
     conviction: int = Field(ge=1, le=10)
     time_horizon: str  # free-form: "12-18 months"
+    entry_price: float | None = None   # purchase price; drives dashboard P&L
+    entry_date: str | None = None      # ISO date of purchase
     pillars: list[Pillar] = Field(default_factory=list)
     catalysts: list[Catalyst] = Field(default_factory=list)
     exit_plan: ExitPlan = Field(default_factory=ExitPlan)

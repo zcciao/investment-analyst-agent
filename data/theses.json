@@ -5,32 +5,49 @@
     "direction": "long",
     "conviction": 7,
     "time_horizon": "12-24 months",
+    "entry_price": null,
+    "entry_date": null,
     "pillars": [
       {
         "name": "Search remains the cash engine",
-        "current_value": "Search rev +12% YoY (placeholder — refresh from latest 10-Q)",
+        "current_value": "Search rev +12% YoY (placeholder \u2014 refresh from latest 10-Q)",
         "threshold_break": "Search YoY growth <0% for 2 consecutive quarters",
-        "watch_signals": ["Alphabet earnings", "ChatGPT/Perplexity share-of-search studies"],
-        "status": "intact"
+        "watch_signals": [
+          "Alphabet earnings",
+          "ChatGPT/Perplexity share-of-search studies"
+        ],
+        "status": "wobbling"
       },
       {
         "name": "Cloud growth re-accelerates",
-        "current_value": "GCP rev growth 30%+ YoY (placeholder)",
+        "current_value": "GCP rev growth 30%+ YoY (placeholder, 2026-05-14)",
         "threshold_break": "<25% YoY for 2 consecutive quarters",
-        "watch_signals": ["Alphabet earnings", "Hyperscaler comparison reports"],
+        "watch_signals": [
+          "Alphabet earnings",
+          "Hyperscaler comparison reports"
+        ],
         "status": "wobbling"
       },
       {
         "name": "Gemini ships at AI frontier",
-        "current_value": "Gemini competitive on benchmarks vs GPT-5 / Claude 4",
+        "current_value": "Gemini competitive on benchmarks vs GPT-5 / Claude 4 (Recorded value, 2026-05-14)",
         "threshold_break": "Two model generations behind frontier for 6+ months",
-        "watch_signals": ["Model release announcements", "LMArena rankings"],
+        "watch_signals": [
+          "Model release announcements",
+          "LMArena rankings"
+        ],
         "status": "intact"
       }
     ],
     "catalysts": [
-      {"name": "Q2 earnings", "expected_date": "2026-07-23"},
-      {"name": "Google I/O", "expected_date": "2026-05-14"}
+      {
+        "name": "Q2 earnings",
+        "expected_date": "2026-07-23"
+      },
+      {
+        "name": "Google I/O",
+        "expected_date": "2026-05-14"
+      }
     ],
     "exit_plan": {
       "take_profit": "Trim 25% if conviction-implied price reached",
@@ -39,8 +56,60 @@
     },
     "source_material": "Self-authored, 2026-05-10",
     "journal": [
-      "2026-05-10: Initial thesis seeded from one-pager."
+      "2026-05-10: Initial thesis seeded from one-pager.",
+      "2026-05-14: Watcher update \u2014 Search remains the cash engine: intact\u2192wobbling."
     ],
-    "last_updated": "2026-05-10T00:00:00"
+    "last_updated": "2026-05-14T11:10:22.507769+00:00"
+  },
+  "MU": {
+    "ticker": "MU",
+    "one_liner": "Micron benefits from sustained AI-driven demand for high-performance memory chips at reasonable valuations.",
+    "direction": "long",
+    "conviction": 7,
+    "time_horizon": "12-24 months",
+    "entry_price": 389.0,
+    "entry_date": "2026-01-22",
+    "pillars": [
+      {
+        "name": "AI Demand Growth",
+        "current_value": "AI memory boom continues to drive stock price appreciation and positive analyst revisions (GuruFocus.com, 2026-05-14)",
+        "threshold_break": "Quarterly revenue growth from AI-related memory products turns negative or industry-wide memory-chip shortage eases significantly",
+        "watch_signals": [
+          "Quarterly earnings reports",
+          "Industry DRAM/NAND pricing indices",
+          "Barrons.com industry shortage analysis"
+        ],
+        "status": "intact"
+      },
+      {
+        "name": "Valuation Discipline",
+        "current_value": "Forward P/E 7.53 (Recorded value, 2026-05-14)",
+        "threshold_break": "Forward P/E ratio expands beyond 15x or trailing P/E exceeds 40x",
+        "watch_signals": [
+          "SEC filings",
+          "Financial data platforms",
+          "Income statement revenue/earnings reports"
+        ],
+        "status": "broken"
+      }
+    ],
+    "catalysts": [
+      {
+        "name": "AI infrastructure spending cycle",
+        "expected_date": "2026-12-31"
+      }
+    ],
+    "exit_plan": {
+      "take_profit": "1100.00",
+      "thesis_break": "2+ pillars broken simultaneously",
+      "time_stop": "2027-05-13"
+    },
+    "source_material": "Memory chips in high demand in AI boom. P/E ratio still in a reasonable position. Already a good hike in the past, 2026-05-13",
+    "journal": [
+      "2026-05-13: Initial thesis created from user note.",
+      "2026-05-13: Updated with live financials (Forward P/E 7.53) and market context regarding AI bottleneck status.",
+      "2026-05-14: Watcher update \u2014 Valuation Discipline: intact\u2192broken."
+    ],
+    "last_updated": "2026-05-14T11:10:29.783629+00:00"
   }
 }
