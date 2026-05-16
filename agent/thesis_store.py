@@ -17,7 +17,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-PillarStatus = Literal["intact", "wobbling", "broken"]
+PillarStatus = Literal["intact", "wobbling", "broken", "strengthening"]
 Direction = Literal["long", "short"]
 
 # Resolve the data file relative to the project root, not the cwd.

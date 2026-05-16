@@ -1,0 +1,51 @@
+[
+  {
+    "id": "dc3d4356-3805-41da-8de0-9c3019faf487",
+    "ran_at": "2026-05-16T18:31:53.838424+00:00",
+    "checked": 2,
+    "new_alerts": 1,
+    "results": [
+      {
+        "ticker": "GOOG",
+        "alerts": 0,
+        "ok": true
+      },
+      {
+        "ticker": "MU",
+        "alerts": 1,
+        "ok": true
+      }
+    ]
+  },
+  {
+    "id": "04610449-a3f8-4da0-9a7c-04ddd6f533b7",
+    "ran_at": "2026-05-16T18:32:00.807603+00:00",
+    "checked": 2,
+    "new_alerts": 1,
+    "results": [
+      {
+        "ticker": "GOOG",
+        "alerts": 0,
+        "ok": true
+      },
+      {
+        "ticker": "MU",
+        "alerts": 1,
+        "ok": true
+      }
+    ]
+  },
+  {
+    "id": "15d0317b-5a50-4f3d-b3df-859d1f65454a",
+    "ran_at": "2026-05-16T19:05:25.631260+00:00",
+    "checked": 1,
+    "new_alerts": 0,
+    "results": [
+      {
+        "ticker": "MU",
+        "alerts": 0,
+        "ok": true
+      }
+    ]
+  }
+]

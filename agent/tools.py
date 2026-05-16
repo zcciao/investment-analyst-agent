@@ -38,6 +38,14 @@ class NewsArg(BaseModel):
     limit: int = Field(default=5, ge=1, le=20, description="Max headlines to return.")
 
 
+class PriceHistoryArg(BaseModel):
+    ticker: str = Field(description="Stock ticker symbol.")
+    period: str = Field(
+        default="1y",
+        description="History window: '1mo'|'3mo'|'6mo'|'1y'|'2y'|'5y'|'max'.",
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Market data tools
 # --------------------------------------------------------------------------- #
@@ -137,6 +145,82 @@ def get_financials_snapshot(ticker: str) -> dict[str, Any]:
         return {"error": f"Could not fetch financials for {ticker}: {e}"}
 
 
+@tool("get_price_history", args_schema=PriceHistoryArg)
+def get_price_history(ticker: str, period: str = "1y") -> dict[str, Any]:
+    """Daily closes over a window, with summary stats.
+
+    Returns: {ticker, period, start, end, closes:[{date,close}], summary:
+    {start_price, end_price, return_pct, max, min, max_drawdown_pct,
+    max_runup_pct}}. Use for back-testing or retrospective analysis.
+    The closes list is downsampled to ~80 points so the payload stays small.
+    """
+    try:
+        t = yf.Ticker(ticker)
+        df = t.history(period=period)
+        if df is None or df.empty:
+            return {"error": f"No history for {ticker} ({period})"}
+
+        # Build full closes list, then downsample to ~80 points for compact payloads.
+        closes_full = [
+            {"date": idx.strftime("%Y-%m-%d"), "close": float(row["Close"])}
+            for idx, row in df.iterrows()
+            if row["Close"] == row["Close"]  # NaN guard
+        ]
+        if len(closes_full) > 80:
+            step = max(1, len(closes_full) // 80)
+            closes = closes_full[::step]
+            # Always include the most recent point.
+            if closes[-1]["date"] != closes_full[-1]["date"]:
+                closes.append(closes_full[-1])
+        else:
+            closes = closes_full
+
+        prices = [p["close"] for p in closes_full]
+        start_price = prices[0]
+        end_price = prices[-1]
+
+        # Max drawdown: largest peak-to-trough drop along the path.
+        peak = prices[0]
+        max_dd = 0.0
+        for p in prices:
+            if p > peak:
+                peak = p
+            dd = (p - peak) / peak * 100 if peak else 0.0
+            if dd < max_dd:
+                max_dd = dd
+
+        # Max runup: largest trough-to-peak gain.
+        trough = prices[0]
+        max_ru = 0.0
+        for p in prices:
+            if p < trough:
+                trough = p
+            ru = (p - trough) / trough * 100 if trough else 0.0
+            if ru > max_ru:
+                max_ru = ru
+
+        return {
+            "ticker": ticker.upper(),
+            "period": period,
+            "start": closes_full[0]["date"],
+            "end": closes_full[-1]["date"],
+            "closes": closes,
+            "summary": {
+                "start_price": round(start_price, 2),
+                "end_price": round(end_price, 2),
+                "return_pct": round((end_price - start_price) / start_price * 100, 2)
+                    if start_price else None,
+                "max": round(max(prices), 2),
+                "min": round(min(prices), 2),
+                "max_drawdown_pct": round(max_dd, 2),
+                "max_runup_pct": round(max_ru, 2),
+            },
+        }
+    except Exception as e:
+        log.exception("get_price_history failed")
+        return {"error": f"Could not fetch history for {ticker}: {e}"}
+
+
 @tool("get_recent_news", args_schema=NewsArg)
 def get_recent_news(ticker: str, limit: int = 5) -> list[dict[str, Any]]:
     """Get recent news headlines for a ticker.
@@ -190,7 +274,7 @@ def list_theses_tool() -> list[dict[str, Any]]:
             "conviction": t.conviction,
             "time_horizon": t.time_horizon,
             "pillar_count": len(t.pillars),
-            "any_wobbling": any(p.status != "intact" for p in t.pillars),
+            "any_wobbling": any(p.status in ("wobbling", "broken") for p in t.pillars),
         }
         for t in thesis_store.list_theses()
     ]

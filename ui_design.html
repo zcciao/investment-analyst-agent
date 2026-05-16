@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>v4 — Briefing + Theses (merged)</title>
+<style>
+  :root {
+    --bg: #f3f4f6;
+    --ink: #0b0d12;
+    --ink-2: #4b5563;
+    --ink-3: #9ca3af;
+    --ink-4: #d1d5db;
+    --card: #ffffff;
+    --hair: #e5e7eb;
+    --hair-2: #eef0f3;
+    --rose-50: #fff1f2;
+    --rose-200: #fecdd3;
+    --rose-700: #be123c;
+    --amber-50: #fffbeb;
+    --amber-200: #fde68a;
+    --amber-700: #b45309;
+    --sky-50: #f0f9ff;
+    --sky-200: #bae6fd;
+    --sky-700: #0369a1;
+    --emerald-50: #ecfdf5;
+    --emerald-600: #059669;
+    --emerald-700: #047857;
+    --violet-50: #f5f3ff;
+    --violet-200: #ddd6fe;
+    --violet-700: #6d28d9;
+    --intact: #10b981;
+    --wobble: #f59e0b;
+    --broken: #ef4444;
+    --shadow: 0 2px 8px rgba(15,23,42,0.04), 0 1px 2px rgba(15,23,42,0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #e8eaef;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 80px;
+  }
+  .caption {
+    width: 100%;
+    max-width: 720px;
+    text-align: center;
+    margin: 8px auto 24px;
+    color: #475569;
+  }
+  .caption h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .caption p { font-size: 14px; margin: 0; color: #6b7280; }
+  .nav-hint {
+    margin-top: 14px;
+    font-size: 12px;
+    color: #94a3b8;
+    letter-spacing: 0.02em;
+  }
+  .nav-hint kbd {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    padding: 1px 6px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    margin: 0 2px;
+    color: #334155;
+  }
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    border: 10px solid #0b0d12;
+    box-shadow: 0 30px 80px rgba(2,6,23,0.18), 0 6px 14px rgba(2,6,23,0.10);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .statusbar {
+    height: 44px;
+    padding: 0 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .statusbar .right { display: flex; gap: 6px; align-items: center; opacity: 0.85; }
+
+  .screens { flex: 1; position: relative; overflow: hidden; }
+  .screen {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    padding: 4px 18px 100px;
+    background: var(--bg);
+    display: none;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+  .screen.active { display: block; animation: fadein 180ms ease-out; }
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* ---------- shared building blocks ---------- */
+  header.page { padding: 12px 4px 12px; }
+  header.page .date { font-size: 13px; color: var(--ink-3); letter-spacing: 0.02em; text-transform: uppercase; font-weight: 600; }
+  header.page h1 { font-size: 32px; margin: 4px 0 0; letter-spacing: -0.02em; font-weight: 700; }
+  header.page .sub { font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+  header.page .back {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 13px; color: var(--ink-2); font-weight: 600;
+    background: none; border: none; padding: 0; cursor: pointer;
+    margin-bottom: 6px;
+  }
+
+  .section-label {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 18px 4px 10px;
+  }
+  .section-label .title {
+    font-size: 12px; font-weight: 700; color: var(--ink-2);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .section-label .count { font-size: 12px; color: var(--ink-3); font-weight: 600; }
+  .section-label .meta { font-size: 12px; color: var(--ink-3); font-weight: 500; }
+  .section-label .meta b { color: var(--ink-2); font-weight: 600; }
+
+  .pill {
+    font-size: 11px; font-weight: 700;
+    padding: 4px 9px; border-radius: 999px;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .pill.break { background: var(--rose-50); color: var(--rose-700); border: 1px solid var(--rose-200); }
+  .pill.wobble { background: var(--amber-50); color: var(--amber-700); border: 1px solid var(--amber-200); }
+  .pill.fyi { background: var(--sky-50); color: var(--sky-700); border: 1px solid var(--sky-200); }
+  .pill.catalyst { background: var(--violet-50); color: var(--violet-700); border: 1px solid var(--violet-200); }
+  .pill.intact { background: var(--emerald-50); color: var(--emerald-700); border: 1px solid #a7f3d0; }
+
+  .chip {
+    font-size: 11px; padding: 3px 8px;
+    background: #f3f4f6; border: 1px solid var(--hair);
+    border-radius: 6px; color: var(--ink-2); font-weight: 500;
+  }
+  .chip.bear { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+
+  .btn {
+    flex: 1; font-size: 13px; font-weight: 600;
+    padding: 9px 0; border-radius: 10px;
+    border: 1px solid var(--hair); background: white;
+    color: var(--ink); cursor: pointer; letter-spacing: -0.01em;
+  }
+  .btn.primary { background: var(--ink); color: white; border-color: var(--ink); }
+
+  /* ---------- BRIEFING screen (v1) ---------- */
+  .health-banner {
+    margin: 8px 4px 6px;
+    background: white;
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+  .health-banner .ring {
+    position: relative;
+    width: 44px; height: 44px;
+    flex-shrink: 0;
+  }
+  .health-banner .ring svg { transform: rotate(-90deg); }
+  .health-banner .ring .pct {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: 13px; font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .health-banner .body {
+    flex: 1;
+  }
+  .health-banner .body .lbl {
+    font-size: 11px; color: var(--ink-3); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .health-banner .body .vals {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-top: 1px;
+    font-size: 13px; color: var(--ink-2);
+  }
+  .health-banner .body .vals b { color: var(--ink); font-weight: 700; }
+  .health-banner .body .vals .dot {
+    width: 4px; height: 4px; background: var(--ink-4); border-radius: 50%;
+    display: inline-block;
+  }
+  .health-banner .chev { color: var(--ink-3); font-size: 18px; }
+
+  .watcher {
+    margin: 14px 4px 6px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--ink-3); font-weight: 500;
+  }
+  .pulse-dot {
+    width: 7px; height: 7px;
+    background: var(--intact); border-radius: 50%;
+    animation: pulse 2.5s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+    100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--hair);
+    border-radius: 18px;
+    padding: 16px 16px 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .card.severity-break { border-left: 3px solid var(--rose-700); }
+  .card.severity-wobble { border-left: 3px solid var(--amber-700); }
+  .card.severity-catalyst { border-left: 3px solid var(--violet-700); }
+
+  .card .row1 {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .ticker {
+    font-weight: 700; font-size: 15px; letter-spacing: -0.01em;
+  }
+  .ticker .price { color: var(--ink-3); font-weight: 500; margin-left: 6px; font-size: 13px; }
+  .time {
+    margin-left: auto; font-size: 12px; color: var(--ink-3); font-weight: 500;
+  }
+  .headline {
+    font-size: 16px; font-weight: 600; line-height: 1.35;
+    letter-spacing: -0.01em; margin: 2px 0 8px;
+  }
+  .evidence { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .body {
+    font-size: 14px; color: var(--ink-2);
+    line-height: 1.5; margin-bottom: 12px;
+  }
+  .body b { color: var(--ink); font-weight: 600; }
+  .pillar-line {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--ink-2); padding: 6px 0;
+  }
+  .pillar-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .pillar-dot.intact { background: var(--intact); }
+  .pillar-dot.wobble { background: var(--wobble); }
+  .pillar-dot.broken { background: var(--broken); }
+  .pillar-line .arrow { color: var(--ink-3); margin: 0 2px; font-size: 11px; }
+  .pillar-line .new { color: var(--rose-700); font-weight: 600; }
+  .actions { display: flex; gap: 8px; margin-top: 8px; }
+
+  .fyi-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid var(--hair);
+    border-radius: 14px; padding: 12px 14px; margin-bottom: 8px;
+  }
+  .fyi-row .ticker { font-size: 14px; min-width: 50px; }
+  .fyi-row .text { font-size: 13px; color: var(--ink-2); line-height: 1.35; flex: 1; }
+  .fyi-row .text b { color: var(--ink); font-weight: 600; }
+  .fyi-row .time { font-size: 11px; }
+
+  /* ---------- THESES screen (v2 in v1 skin) ---------- */
+  .kpi-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    margin: 8px 0 12px;
+  }
+  .kpi {
+    background: var(--card); border: 1px solid var(--hair);
+    border-radius: 12px; padding: 10px 8px;
+    box-shadow: var(--shadow);
+  }
+  .kpi .label {
+    font-size: 9px; color: var(--ink-3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 700; margin-bottom: 4px;
+  }
+  .kpi .value {
+    font-size: 18px; font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .kpi .value.red { color: var(--broken); }
+  .kpi .value.amber { color: var(--amber-700); }
+  .kpi .value.green { color: var(--emerald-700); }
+  .kpi .sub { font-size: 10px; color: var(--ink-3); margin-top: 2px; }
+  .kpi .sub.up { color: var(--emerald-600); }
+  .kpi .sub.dn { color: var(--broken); }
+
+  .ticker-strip {
+    display: flex; overflow-x: auto; gap: 14px;
+    padding: 8px 12px; margin: 0 -18px 12px;
+    background: white;
+    border-top: 1px solid var(--hair);
+    border-bottom: 1px solid var(--hair);
+  }
+  .ticker-strip::-webkit-scrollbar { display: none; }
+  .ts-item {
+    flex-shrink: 0; font-size: 12px;
+    display: flex; align-items: baseline; gap: 4px;
+  }
+  .ts-item b { color: var(--ink); font-weight: 700; }
+  .ts-item .up { color: var(--emerald-600); font-weight: 600; font-size: 11px; }
+  .ts-item .dn { color: var(--broken); font-weight: 600; font-size: 11px; }
+
+  .filters {
+    display: flex; gap: 6px; margin: 4px 0 14px; overflow-x: auto;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+  .filter {
+    font-size: 12px; padding: 6px 12px;
+    border: 1px solid var(--hair); border-radius: 999px;
+    background: white; color: var(--ink-2);
+    font-weight: 600; white-space: nowrap;
+    font-family: inherit; letter-spacing: -0.01em;
+    cursor: pointer;
+  }
+  .filter.active {
+    background: var(--ink); color: white; border-color: var(--ink);
+  }
+
+  /* Compact thesis card (dashboard-style, light skin) */
+  .thesis-card {
+    background: var(--card); border: 1px solid var(--hair);
+    border-radius: 16px; padding: 14px 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+  .thesis-card.has-break { border-left: 3px solid var(--broken); }
+  .thesis-card.has-wobble { border-left: 3px solid var(--wobble); }
+  .thesis-card .row1 {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .thesis-card .tkr {
+    font-size: 17px; font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .thesis-card .name {
+    font-size: 12px; color: var(--ink-3);
+    font-weight: 500;
+  }
+  .thesis-card .price {
+    margin-left: auto; font-size: 14px; font-weight: 700;
+  }
+  .thesis-card .chg { font-size: 12px; font-weight: 600; margin-left: 4px; }
+  .thesis-card .chg.up { color: var(--emerald-600); }
+  .thesis-card .chg.dn { color: var(--broken); }
+  .thesis-card .row2 {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; color: var(--ink-2);
+    margin-bottom: 10px;
+  }
+  .conv-bar {
+    display: inline-block; width: 60px; height: 4px;
+    background: var(--hair); border-radius: 2px;
+    position: relative; overflow: hidden;
+    vertical-align: middle;
+  }
+  .conv-bar > i {
+    display: block; height: 100%;
+    background: linear-gradient(90deg, #60a5fa, var(--intact));
+  }
+  .row2 .sep { color: var(--ink-4); }
+  .row2 .severity-tag { font-weight: 700; }
+  .row2 .severity-tag.break { color: var(--broken); }
+  .row2 .severity-tag.wobble { color: var(--amber-700); }
+  .row2 .severity-tag.intact { color: var(--emerald-700); }
+
+  .pillars-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 4px 10px; margin-bottom: 10px;
+  }
+  .p-row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--ink-2);
+    padding: 3px 0;
+  }
+  .p-row .led {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .p-row.intact .led { background: var(--intact); }
+  .p-row.wobble .led { background: var(--wobble); }
+  .p-row.broken .led {
+    background: var(--broken);
+    box-shadow: 0 0 0 0 rgba(239,68,68,0.55);
+    animation: pulseBroken 1.6s ease-in-out infinite;
+  }
+  @keyframes pulseBroken {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50% { box-shadow: 0 0 0 5px rgba(239,68,68,0); }
+  }
+  .p-row .pname { color: var(--ink); font-weight: 500; }
+  .p-row .pval { color: var(--ink-3); margin-left: auto; font-size: 11px; }
+
+  .spark-row {
+    display: flex; align-items: center; gap: 10px;
+    padding-top: 10px; border-top: 1px dashed var(--hair);
+  }
+  .spark { flex: 1; height: 28px; }
+  .spark-meta {
+    font-size: 11px; color: var(--ink-2); text-align: right;
+    font-weight: 500;
+  }
+  .spark-meta b { color: var(--ink); font-weight: 700; }
+  .spark-label {
+    font-size: 10px; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    font-weight: 700;
+  }
+
+  /* ---------- THESIS DETAIL ---------- */
+  .detail-header {
+    margin: 6px 4px 14px;
+  }
+  .detail-header .top-row {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 4px;
+  }
+  .detail-header .tkr {
+    font-size: 30px; font-weight: 800; letter-spacing: -0.02em;
+  }
+  .detail-header .name {
+    font-size: 13px; color: var(--ink-3); font-weight: 500;
+  }
+  .detail-header .price-row {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-top: 2px;
+  }
+  .detail-header .px {
+    font-size: 22px; font-weight: 700;
+  }
+  .detail-header .chg.dn { color: var(--broken); font-weight: 600; }
+  .detail-header .chg.up { color: var(--emerald-600); font-weight: 600; }
+  .meta-row {
+    display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .meta-row .chip { font-size: 11px; }
+
+  .pillar-detail {
+    background: var(--card); border: 1px solid var(--hair);
+    border-radius: 14px; padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+  }
+  .pillar-detail.broken { border-left: 3px solid var(--broken); }
+  .pillar-detail.wobble { border-left: 3px solid var(--wobble); }
+  .pillar-detail.intact { border-left: 3px solid var(--intact); }
+  .pillar-detail .head {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .pillar-detail .head .pname {
+    font-size: 14px; font-weight: 700; letter-spacing: -0.01em;
+  }
+  .pillar-detail .head .status-pill {
+    margin-left: auto;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 8px; border-radius: 6px;
+  }
+  .pillar-detail.intact .status-pill { background: var(--emerald-50); color: var(--emerald-700); }
+  .pillar-detail.wobble .status-pill { background: var(--amber-50); color: var(--amber-700); }
+  .pillar-detail.broken .status-pill { background: var(--rose-50); color: var(--rose-700); }
+  .pillar-detail .kv {
+    display: grid; grid-template-columns: 110px 1fr;
+    gap: 4px 10px;
+    font-size: 12px; color: var(--ink-2);
+    margin-top: 6px;
+  }
+  .pillar-detail .kv .k {
+    color: var(--ink-3); text-transform: uppercase;
+    letter-spacing: 0.06em; font-size: 10px; font-weight: 700;
+    align-self: center;
+  }
+  .pillar-detail .kv .v { color: var(--ink); }
+  .pillar-detail .kv .v b { font-weight: 700; }
+  .pillar-detail .kv .v.broken { color: var(--broken); font-weight: 600; }
+  .pillar-detail .signals {
+    display: flex; flex-wrap: wrap; gap: 4px;
+  }
+  .pillar-detail .history {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px dashed var(--hair);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .pillar-detail .history svg { flex: 1; }
+  .pillar-detail .history .label {
+    font-size: 10px; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+
+  /* ---------- ASK placeholder ---------- */
+  .ask-empty {
+    height: 100%; min-height: 600px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px 30px;
+    color: var(--ink-2);
+  }
+  .ask-empty h2 {
+    font-size: 22px; margin: 16px 0 8px;
+    letter-spacing: -0.01em;
+  }
+  .ask-empty p { font-size: 14px; line-height: 1.5; max-width: 280px; }
+  .ask-suggestions {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-top: 20px; width: 100%;
+  }
+  .ask-sug {
+    text-align: left;
+    background: white; border: 1px solid var(--hair);
+    border-radius: 12px; padding: 12px 14px;
+    font-size: 14px; color: var(--ink);
+    font-weight: 500; cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  .ask-sug b { color: var(--ink); font-weight: 700; }
+
+  /* ---------- Tab bar ---------- */
+  .tabbar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 84px;
+    background: rgba(255,255,255,0.94);
+    border-top: 1px solid var(--hair);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0 24px;
+    z-index: 10;
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--ink-3);
+    font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+    background: none; border: none; cursor: pointer;
+    padding: 0; min-width: 60px;
+  }
+  .tab.active { color: var(--ink); }
+  .tab .icon-wrap { position: relative; }
+  .tab .icon {
+    width: 24px; height: 24px;
+    display: grid; place-items: center;
+  }
+  .tab .icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.active .icon svg { stroke-width: 2.2; }
+  .badge {
+    position: absolute;
+    top: -2px; right: -8px;
+    background: var(--broken); color: white;
+    font-size: 9px; font-weight: 700;
+    padding: 1px 5px; border-radius: 8px;
+    min-width: 14px; text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="caption">
+    <h1>v4 — Briefing + Theses (merged)</h1>
+    <p>Briefing stays the home (v1). Tap <b>Theses</b> for the dashboard view (v2 data in the v1 skin). Tap any thesis card to drill in.</p>
+    <div class="nav-hint">Tabs at the bottom are live. Tap a card on Theses to see the detail screen.</div>
+  </div>
+
+  <div class="phone">
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="right">
+        <svg width="16" height="11" viewBox="0 0 16 11"><path d="M0 8h2v3H0zM4 6h2v5H4zM8 4h2v7H8zM12 1h2v10h-2z" fill="currentColor"/></svg>
+        <svg width="15" height="11" viewBox="0 0 15 11"><path d="M7.5 0c2.6 0 5 1 6.8 2.7l-1 1A8 8 0 0 0 7.5 1.4 8 8 0 0 0 1.7 3.7l-1-1A9.6 9.6 0 0 1 7.5 0Zm0 3.5c1.7 0 3.3.6 4.5 1.8l-1 1a5 5 0 0 0-7 0l-1-1A6.3 6.3 0 0 1 7.5 3.5ZM7.5 7a3 3 0 0 1 2.1.9l-2.1 2-2.1-2A3 3 0 0 1 7.5 7Z" fill="currentColor"/></svg>
+        <svg width="24" height="11" viewBox="0 0 24 11"><rect x="0.5" y="0.5" width="20" height="10" rx="2" fill="none" stroke="currentColor"/><rect x="2" y="2" width="17" height="7" rx="1" fill="currentColor"/><rect x="21" y="3.5" width="1.5" height="4" rx="0.5" fill="currentColor"/></svg>
+      </span>
+    </div>
+
+    <div class="screens">
+      <!-- ====================== BRIEFING ====================== -->
+      <div class="screen active" id="screen-briefing">
+        <header class="page">
+          <div class="date">Fri · May 15</div>
+          <h1>Briefing</h1>
+          <div class="sub">3 things moved on your watchlist overnight.</div>
+        </header>
+
+        <div class="health-banner" onclick="showScreen('theses')">
+          <div class="ring">
+            <svg width="44" height="44" viewBox="0 0 44 44">
+              <circle cx="22" cy="22" r="18" fill="none" stroke="#eef0f3" stroke-width="4"/>
+              <circle cx="22" cy="22" r="18" fill="none" stroke="#f59e0b" stroke-width="4"
+                stroke-dasharray="113.1" stroke-dashoffset="31.7" stroke-linecap="round"/>
+            </svg>
+            <div class="pct">72%</div>
+          </div>
+          <div class="body">
+            <div class="lbl">Portfolio Health</div>
+            <div class="vals">
+              <b>8</b> theses
+              <span class="dot"></span>
+              <b style="color:var(--broken)">1</b> broken
+              <span class="dot"></span>
+              <b style="color:var(--amber-700)">2</b> wobbling
+            </div>
+          </div>
+          <div class="chev">›</div>
+        </div>
+
+        <div class="watcher">
+          <span class="pulse-dot"></span>
+          <span>Watcher ran 6 min ago · Markets · News · Social · Fundamentals</span>
+        </div>
+
+        <div class="section-label">
+          <span class="title">Needs your attention</span>
+          <span class="count">2</span>
+        </div>
+
+        <div class="card severity-break">
+          <div class="row1">
+            <span class="pill break">Thesis Break</span>
+            <span class="ticker">TSLA <span class="price">$172.30 · −3.4%</span></span>
+            <span class="time">6m</span>
+          </div>
+          <div class="headline">Cybertruck delivery pillar is broken.</div>
+          <div class="body">
+            Q1 deliveries came in at <b>1.2k</b> vs. your <b>threshold ≥10k for 2 quarters</b>. Second consecutive miss.
+          </div>
+          <div class="pillar-line">
+            <span class="pillar-dot wobble"></span>
+            <span>Cybertruck ramp</span>
+            <span class="arrow">→</span>
+            <span class="pillar-dot broken"></span>
+            <span class="new">broken</span>
+          </div>
+          <div class="evidence">
+            <span class="chip">10-Q · pg 14</span>
+            <span class="chip">Investor letter</span>
+            <span class="chip bear">2 prior misses</span>
+          </div>
+          <div class="actions">
+            <button class="btn primary" onclick="showScreen('detail')">Open thesis</button>
+            <button class="btn">Ask analyst</button>
+          </div>
+        </div>
+
+        <div class="card severity-wobble">
+          <div class="row1">
+            <span class="pill wobble">Pillar Wobble</span>
+            <span class="ticker">GOOG <span class="price">$168.42 · +0.8%</span></span>
+            <span class="time">1h</span>
+          </div>
+          <div class="headline">Cloud growth decelerated for the second quarter.</div>
+          <div class="body">
+            GCP growth came in at <b>28% YoY</b>, vs. your pillar threshold of <b>≥30%</b>. One more quarter under and this pillar breaks.
+          </div>
+          <div class="pillar-line">
+            <span class="pillar-dot intact"></span>
+            <span>Cloud growth</span>
+            <span class="arrow">→</span>
+            <span class="pillar-dot wobble"></span>
+            <span class="new">wobbling</span>
+          </div>
+          <div class="evidence">
+            <span class="chip">Q1 earnings call</span>
+            <span class="chip">FactSet est.</span>
+            <span class="chip">2 of 5 pillars</span>
+          </div>
+          <div class="actions">
+            <button class="btn primary">Open thesis</button>
+            <button class="btn">Snooze 7d</button>
+          </div>
+        </div>
+
+        <div class="section-label">
+          <span class="title">Upcoming catalysts</span>
+          <span class="count">1</span>
+        </div>
+
+        <div class="card severity-catalyst">
+          <div class="row1">
+            <span class="pill catalyst">Catalyst · Tomorrow</span>
+            <span class="ticker">MSFT <span class="price">$408.12</span></span>
+            <span class="time">in 18h</span>
+          </div>
+          <div class="headline">Q3 earnings · 4:30pm PT</div>
+          <div class="body">
+            Watching: <b>Azure growth</b>, <b>Copilot attach rate</b>, <b>capex guide</b>. I'll write a preview at 2pm and a debrief within 30m of the call.
+          </div>
+          <div class="actions">
+            <button class="btn">Preview brief</button>
+            <button class="btn">Edit watchlist</button>
+          </div>
+        </div>
+
+        <div class="section-label">
+          <span class="title">FYI</span>
+          <span class="count">4</span>
+        </div>
+
+        <div class="fyi-row">
+          <span class="ticker">NVDA</span>
+          <div class="text">Morgan Stanley raised PT to <b>$1,100</b>. No pillar impact.</div>
+          <span class="time">3h</span>
+        </div>
+        <div class="fyi-row">
+          <span class="ticker">META</span>
+          <div class="text">Reels monetization commentary lines up with your <b>ARPU pillar</b>.</div>
+          <span class="time">5h</span>
+        </div>
+        <div class="fyi-row">
+          <span class="ticker">AAPL</span>
+          <div class="text">India production share crossed <b>14%</b>. Long-tail signal.</div>
+          <span class="time">8h</span>
+        </div>
+        <div class="fyi-row">
+          <span class="ticker">AMZN</span>
+          <div class="text">AWS reorg announced. Watching for impact on your <b>op-margin pillar</b>.</div>
+          <span class="time">11h</span>
+        </div>
+      </div>
+
+      <!-- ====================== THESES (dashboard, v2 in light skin) ====================== -->
+      <div class="screen" id="screen-theses">
+        <header class="page">
+          <div class="date">Portfolio</div>
+          <h1>Theses</h1>
+          <div class="sub">8 holdings · 5 active theses · weighted conviction 7.4</div>
+        </header>
+
+        <div class="kpi-strip">
+          <div class="kpi">
+            <div class="label">Health</div>
+            <div class="value amber">72%</div>
+            <div class="sub">pillars intact</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Alerts</div>
+            <div class="value red">3</div>
+            <div class="sub">1 break · 2 wob</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Wt. Conv</div>
+            <div class="value">7.4</div>
+            <div class="sub dn">↓ 0.3 wk</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Catalysts</div>
+            <div class="value green">2</div>
+            <div class="sub">next: 18h</div>
+          </div>
+        </div>
+
+        <div class="ticker-strip">
+          <span class="ts-item"><b>GOOG</b> 168.42 <span class="up">+0.8%</span></span>
+          <span class="ts-item"><b>MSFT</b> 408.12 <span class="up">+0.5%</span></span>
+          <span class="ts-item"><b>TSLA</b> 172.30 <span class="dn">−3.4%</span></span>
+          <span class="ts-item"><b>NVDA</b> 927.45 <span class="up">+2.1%</span></span>
+          <span class="ts-item"><b>META</b> 487.30 <span class="up">+0.7%</span></span>
+          <span class="ts-item"><b>AAPL</b> 191.04 <span class="dn">−0.2%</span></span>
+          <span class="ts-item"><b>AMZN</b> 184.50 <span class="up">+0.4%</span></span>
+        </div>
+
+        <div class="filters">
+          <button class="filter active">All</button>
+          <button class="filter">Alerts</button>
+          <button class="filter">Wobble</button>
+          <button class="filter">Catalysts</button>
+          <button class="filter">By conv</button>
+        </div>
+
+        <div class="section-label">
+          <span class="title">Active theses</span>
+          <span class="meta">sort: <b>severity</b> ↓</span>
+        </div>
+
+        <!-- TSLA -->
+        <div class="thesis-card has-break" onclick="showScreen('detail')">
+          <div class="row1">
+            <span class="tkr">TSLA</span>
+            <span class="name">Tesla, Inc.</span>
+            <span class="price">$172.30<span class="chg dn">−3.4%</span></span>
+          </div>
+          <div class="row2">
+            <span>conv</span>
+            <span class="conv-bar"><i style="width:55%"></i></span>
+            <b style="color:var(--ink);">5.5</b>
+            <span class="sep">·</span>
+            <span>horizon 3y</span>
+            <span class="sep">·</span>
+            <span class="severity-tag break">1 BROKEN</span>
+          </div>
+          <div class="pillars-grid">
+            <div class="p-row broken"><span class="led"></span><span class="pname">Cybertruck ramp</span><span class="pval">1.2k/Q</span></div>
+            <div class="p-row wobble"><span class="led"></span><span class="pname">Auto margin</span><span class="pval">17.4%</span></div>
+            <div class="p-row intact"><span class="led"></span><span class="pname">Energy storage</span><span class="pval">+90% Y</span></div>
+            <div class="p-row intact"><span class="led"></span><span class="pname">FSD progress</span><span class="pval">v12.4</span></div>
+          </div>
+          <div class="spark-row">
+            <span class="spark-label">Health 30d</span>
+            <svg class="spark" viewBox="0 0 200 28" preserveAspectRatio="none">
+              <polyline fill="none" stroke="#ef4444" stroke-width="1.6"
+                points="0,7 14,8 28,7 42,9 56,11 70,9 84,12 98,11 112,14 126,16 140,17 154,18 168,20 182,23 196,24"/>
+              <circle cx="196" cy="24" r="2.5" fill="#ef4444"/>
+            </svg>
+            <div class="spark-meta">85% → <b style="color:var(--broken)">50%</b></div>
+          </div>
+        </div>
+
+        <!-- GOOG -->
+        <div class="thesis-card has-wobble" onclick="showScreen('detail')">
+          <div class="row1">
+            <span class="tkr">GOOG</span>
+            <span class="name">Alphabet Inc.</span>
+            <span class="price">$168.42<span class="chg up">+0.8%</span></span>
+          </div>
+          <div class="row2">
+            <span>conv</span>
+            <span class="conv-bar"><i style="width:80%"></i></span>
+            <b style="color:var(--ink);">8.0</b>
+            <span class="sep">·</span>
+            <span>horizon 5y</span>
+            <span class="sep">·</span>
+            <span class="severity-tag wobble">1 WOBBLE</span>
+          </div>
+          <div class="pillars-grid">
+            <div class="p-row wobble"><span class="led"></span><span class="pname">Cloud growth</span><span class="pval">28% Y</span></div>
+            <div class="p-row intact"><span class="led"></span><span class="pname">Search moat</span><span class="pval">stable</span></div>
+            <div class="p-row intact"><span class="led"></span><span class="pname">AI integ.</span><span class="pval">Gemini 2</span></div>
+            <div class="p-row intact"><span class="led"></span><span class="pname">Capital ret.</span><span class="pval">$70B</span></div>
+            <div class="p-row intact"><span class="led"></span><span class="pname">YouTube ads</span><span class="pval">+13% Y</span></div>
+          </div>
+          <div class="spark-row">
+            <span class="spark-label">Health 30d</span>
+            <svg class="spark" viewBox="0 0 200 28" preserveAspectRatio="none">
+              <polyline fill="none" stroke="#f59e0b" stroke-width="1.6"
+                points="0,6 14,7 28,7 42,6 56,8 70,9 84,9 98,10 112,11 126,11 140,12 154,13 168,13 182,14 196,14"/>
+              <circle cx="196" cy="14" r="2.5" fill="#f59e0b"/>
+            </svg>
+            <div class="spark-meta">100% → <b style="color:var(--amber-700)">80%</b></div>
+          </div>
+        </div>
+
+        <!-- MSFT -->
+        <div class="thesis-card" onclick="showScreen('detail')">
+          <div class="row1">
+            <span class="tkr">MSFT</span>
+            <span class="name">Microsoft Corp.</span>
+            <span class="price">$408.12<span class="chg up">+0.5%</span></span>
+          </div>
+          <div class="row2">
+            <span>conv</span>
+            <span class="conv-bar"><i style="width:90%"></i></span>
+            <b style="color:var(--ink);">9.0</b>
+            <span class="sep">·</span>
+            <span>horizon 5y</span>
+            <span class="sep">·</span>
+            <span class="severity-tag" style="color:var(--violet-700)">CATALYST T-18h</span>
+          </div>
+          <div class="pillars-grid">
+            <div class="p-row intact"><span class="led"></span><span class="pname">Azure growth</span><span class="pval">+31% Y</span></div>
+            <div class="p-row intact"><span class="led"></span><span class="pname">Copilot attach</span><span class="pval">22%</span></div>
+            <div class="p-row intact"><span class="led"></span><span class="pname">OAI alignment</span><span class="pval">on-track</span></div>
+            <div class="p-row intact"><span class="led"></span><span class="pname">Op margin</span><span class="pval">44%</span></div>
+          </div>
+          <div class="spark-row">
+            <span class="spark-label">Health 30d</span>
+            <svg class="spark" viewBox="0 0 200 28" preserveAspectRatio="none">
+              <polyline fill="none" stroke="#10b981" stroke-width="1.6"
+                points="0,8 14,7 28,8 42,7 56,7 70,6 84,7 98,6 112,5 126,6 140,5 154,5 168,4 182,4 196,4"/>
+              <circle cx="196" cy="4" r="2.5" fill="#10b981"/>
+            </svg>
+            <div class="spark-meta">95% → <b style="color:var(--emerald-700)">100%</b></div>
+          </div>
+        </div>
+
+        <!-- NVDA collapsed -->
+        <div class="thesis-card" onclick="showScreen('detail')">
+          <div class="row1">
+            <span class="tkr">NVDA</span>
+            <span class="name">NVIDIA Corp.</span>
+            <span class="price">$927.45<span class="chg up">+2.1%</span></span>
+          </div>
+          <div class="row2">
+            <span>conv</span>
+            <span class="conv-bar"><i style="width:70%"></i></span>
+            <b style="color:var(--ink);">7.0</b>
+            <span class="sep">·</span>
+            <span>4 pillars</span>
+            <span class="sep">·</span>
+            <span class="severity-tag intact">all intact</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================== THESIS DETAIL ====================== -->
+      <div class="screen" id="screen-detail">
+        <header class="page">
+          <button class="back" onclick="showScreen('theses')">← Theses</button>
+          <div class="top-row">
+            <span class="tkr">TSLA</span>
+            <span class="name">Tesla, Inc.</span>
+          </div>
+          <div class="price-row">
+            <span class="px">$172.30</span>
+            <span class="chg dn">−$6.04 (−3.4%) today</span>
+          </div>
+          <div class="meta-row">
+            <span class="chip">Long · 3y horizon</span>
+            <span class="chip">Conviction 5.5/10</span>
+            <span class="chip bear">2 prior add-on-dip incidents</span>
+          </div>
+        </header>
+
+        <div class="card severity-break" style="padding: 12px 14px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span class="pill break">Thesis Break</span>
+            <span class="time">6m ago · Supervisor approved</span>
+          </div>
+          <div style="font-size:14px; color:var(--ink-2); line-height:1.5;">
+            <b style="color:var(--ink)">Cybertruck ramp</b> moved <span style="color:var(--amber-700); font-weight:600">wobbling</span> → <span style="color:var(--broken); font-weight:700">broken</span> after a second consecutive miss against your threshold (≥10k/Q for 2Q).
+          </div>
+        </div>
+
+        <div class="section-label">
+          <span class="title">Pillars · 4</span>
+          <span class="meta">tap any to edit threshold</span>
+        </div>
+
+        <div class="pillar-detail broken">
+          <div class="head">
+            <span class="pillar-dot broken"></span>
+            <span class="pname">Cybertruck ramp</span>
+            <span class="status-pill">Broken</span>
+          </div>
+          <div class="kv">
+            <div class="k">Current</div>
+            <div class="v broken"><b>1,200 / Q</b> · 2nd straight miss</div>
+            <div class="k">Threshold</div>
+            <div class="v"><b>≥10,000</b> for 2 consecutive quarters</div>
+            <div class="k">Watch signals</div>
+            <div class="v signals">
+              <span class="chip">10-Q deliveries</span>
+              <span class="chip">Investor letter</span>
+              <span class="chip">Production weekly</span>
+            </div>
+          </div>
+          <div class="history">
+            <span class="label">12mo</span>
+            <svg viewBox="0 0 240 36" preserveAspectRatio="none" height="36">
+              <polyline fill="none" stroke="#ef4444" stroke-width="1.6"
+                points="0,8 20,10 40,9 60,12 80,14 100,12 120,15 140,17 160,18 180,22 200,28 220,30 240,32"/>
+              <circle cx="240" cy="32" r="2.5" fill="#ef4444"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="pillar-detail wobble">
+          <div class="head">
+            <span class="pillar-dot wobble"></span>
+            <span class="pname">Auto gross margin</span>
+            <span class="status-pill">Wobbling</span>
+          </div>
+          <div class="kv">
+            <div class="k">Current</div>
+            <div class="v"><b>17.4%</b> · down from 19.3% last Q</div>
+            <div class="k">Threshold</div>
+            <div class="v"><b>≥15%</b> sustained</div>
+            <div class="k">Watch signals</div>
+            <div class="v signals">
+              <span class="chip">Quarterly 10-Q</span>
+              <span class="chip">Earnings call</span>
+              <span class="chip">Price actions</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pillar-detail intact">
+          <div class="head">
+            <span class="pillar-dot intact"></span>
+            <span class="pname">Energy storage growth</span>
+            <span class="status-pill">Intact</span>
+          </div>
+          <div class="kv">
+            <div class="k">Current</div>
+            <div class="v"><b>+90% YoY</b></div>
+            <div class="k">Threshold</div>
+            <div class="v"><b>≥40% YoY</b></div>
+          </div>
+        </div>
+
+        <div class="pillar-detail intact">
+          <div class="head">
+            <span class="pillar-dot intact"></span>
+            <span class="pname">FSD progress</span>
+            <span class="status-pill">Intact</span>
+          </div>
+          <div class="kv">
+            <div class="k">Current</div>
+            <div class="v"><b>v12.4</b> · ~450k users</div>
+            <div class="k">Threshold</div>
+            <div class="v">v12+ shipped by Q3</div>
+          </div>
+        </div>
+
+        <div class="section-label">
+          <span class="title">Recent watcher updates</span>
+          <span class="count">3 today</span>
+        </div>
+
+        <div class="fyi-row">
+          <span class="ticker" style="min-width: 36px; color: var(--ink-3); font-size: 11px;">10-Q</span>
+          <div class="text">Q1 deliveries 1,200 · margin 17.4% · breaks Cybertruck pillar</div>
+          <span class="time">6m</span>
+        </div>
+        <div class="fyi-row">
+          <span class="ticker" style="min-width: 36px; color: var(--ink-3); font-size: 11px;">News</span>
+          <div class="text">Reuters: Tesla cuts CT prices in 3 trims to clear inventory</div>
+          <span class="time">2h</span>
+        </div>
+        <div class="fyi-row">
+          <span class="ticker" style="min-width: 36px; color: var(--ink-3); font-size: 11px;">Social</span>
+          <div class="text">$TSLA sentiment turned −0.31 (bearish) on retail boards</div>
+          <span class="time">5h</span>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+          <button class="btn primary">Revise thesis</button>
+          <button class="btn">Ask analyst</button>
+        </div>
+      </div>
+
+      <!-- ====================== ASK placeholder ====================== -->
+      <div class="screen" id="screen-ask">
+        <div class="ask-empty">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--ink); color: white; display: grid; place-items: center; font-size: 22px; font-weight: 700;">A</div>
+          <h2>Ask the Analyst</h2>
+          <p>Get the bear case, preview a catalyst, or dig into any pillar with citations.</p>
+          <div class="ask-suggestions">
+            <div class="ask-sug">What's the bear case on <b>GOOG</b> right now?</div>
+            <div class="ask-sug">Preview tomorrow's <b>MSFT</b> earnings — what should I watch?</div>
+            <div class="ask-sug">Show me everything that moved my <b>wobbling pillars</b> this week</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <button class="tab active" data-screen="briefing" onclick="showScreen('briefing')">
+        <div class="icon-wrap">
+          <div class="icon"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></div>
+          <span class="badge">3</span>
+        </div>
+        <div>Briefing</div>
+      </button>
+      <button class="tab" data-screen="theses" onclick="showScreen('theses')">
+        <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="11" width="7" height="10" rx="1.5"/><rect x="3" y="15" width="7" height="6" rx="1.5"/></svg></div>
+        <div>Theses</div>
+      </button>
+      <button class="tab" data-screen="ask" onclick="showScreen('ask')">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-5.4A8 8 0 1 1 21 12z"/></svg></div>
+        <div>Ask</div>
+      </button>
+      <button class="tab" data-screen="you" onclick="showScreen('you')">
+        <div class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+        <div>You</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showScreen(name) {
+    var map = { briefing: 'screen-briefing', theses: 'screen-theses', detail: 'screen-detail', ask: 'screen-ask', you: 'screen-ask' };
+    var id = map[name] || 'screen-briefing';
+    document.querySelectorAll('.screen').forEach(function(el) {
+      el.classList.toggle('active', el.id === id);
+    });
+    // Tab bar highlight — detail rolls up under "theses"
+    var tabName = (name === 'detail') ? 'theses' : (name === 'you' ? 'you' : name);
+    document.querySelectorAll('.tab').forEach(function(t) {
+      t.classList.toggle('active', t.dataset.screen === tabName);
+    });
+    // Scroll the now-active screen back to top
+    var active = document.getElementById(id);
+    if (active) active.scrollTop = 0;
+  }
+</script>
+</body>
+</html>

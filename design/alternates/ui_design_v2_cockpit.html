@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>v2 — The Cockpit</title>
+<style>
+  :root {
+    --bg-0: #06080c;
+    --bg-1: #0a0e14;
+    --bg-2: #0f141c;
+    --bg-3: #161d28;
+    --ink-0: #e6edf3;
+    --ink-1: #a1adba;
+    --ink-2: #5b6776;
+    --ink-3: #364150;
+    --grid: rgba(82,97,114,0.10);
+    --intact: #22d3a0;
+    --wobble: #f5a623;
+    --broken: #ff4d6d;
+    --accent: #6ee7ff;
+    --hair: #1d2530;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #11151c;
+    color: var(--ink-0);
+    font-family: "JetBrains Mono", "SF Mono", ui-monospace, "Menlo", monospace;
+    -webkit-font-smoothing: antialiased;
+  }
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+  .wrap { width: 100%; max-width: 720px; }
+  .caption {
+    text-align: center;
+    margin: 8px auto 24px;
+    color: #a1adba;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  .caption h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; color: #e6edf3; }
+  .caption p { font-size: 14px; margin: 0; color: #8896a4; }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    background: var(--bg-0);
+    border-radius: 44px;
+    border: 10px solid #000;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 6px 14px rgba(0,0,0,0.4),
+                inset 0 0 0 1px #1d2530;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 20px 20px, 20px 20px;
+  }
+  .statusbar {
+    height: 44px;
+    padding: 0 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-0);
+    flex-shrink: 0;
+  }
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 14px 100px;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 4px 2px 12px;
+  }
+  .breadcrumb {
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .breadcrumb b { color: var(--accent); font-weight: 600; }
+  .blink {
+    color: var(--intact);
+    animation: blink 1.6s steps(2, end) infinite;
+  }
+  @keyframes blink { to { opacity: 0.2; } }
+
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .kpi {
+    background: var(--bg-1);
+    border: 1px solid var(--hair);
+    border-radius: 6px;
+    padding: 8px 6px;
+  }
+  .kpi .label {
+    font-size: 9px;
+    color: var(--ink-2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .kpi .value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink-0);
+    letter-spacing: -0.02em;
+  }
+  .kpi .value.green { color: var(--intact); }
+  .kpi .value.amber { color: var(--wobble); }
+  .kpi .value.red { color: var(--broken); }
+  .kpi .sub { font-size: 9px; color: var(--ink-2); margin-top: 2px; letter-spacing: 0.04em; }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 14px 2px 8px;
+  }
+  .section-label .title {
+    font-size: 10px;
+    color: var(--ink-1);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-weight: 700;
+  }
+  .section-label .rule {
+    flex: 1;
+    height: 1px;
+    background: var(--hair);
+  }
+  .section-label .meta {
+    font-size: 10px;
+    color: var(--ink-2);
+    letter-spacing: 0.05em;
+  }
+  .section-label .meta .green { color: var(--intact); }
+
+  .card {
+    background: var(--bg-1);
+    border: 1px solid var(--hair);
+    border-radius: 8px;
+    padding: 12px 12px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .card.alert { border-color: rgba(255,77,109,0.35); box-shadow: 0 0 0 1px rgba(255,77,109,0.1) inset; }
+  .card.warn { border-color: rgba(245,166,35,0.35); }
+
+  .card .row1 {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .tkr {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ink-0);
+    letter-spacing: 0.02em;
+  }
+  .pos-side {
+    font-size: 9px;
+    color: var(--ink-2);
+    padding: 1px 4px;
+    border: 1px solid var(--ink-3);
+    border-radius: 3px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .pos-side.long { color: var(--intact); border-color: rgba(34,211,160,0.4); }
+  .price {
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-0);
+  }
+  .chg { font-size: 11px; padding-left: 4px; }
+  .chg.up { color: var(--intact); }
+  .chg.dn { color: var(--broken); }
+
+  .card .row2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--ink-1);
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+  }
+  .row2 .sep { color: var(--ink-3); }
+  .conv {
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .conv-bar {
+    display: inline-block;
+    width: 56px;
+    height: 4px;
+    background: var(--bg-3);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .conv-bar > i {
+    display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--intact));
+  }
+
+  .pillars {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px 8px;
+    margin: 8px 0 10px;
+  }
+  .pillar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--ink-1);
+    padding: 3px 0;
+  }
+  .pillar .led {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px currentColor;
+  }
+  .pillar.intact .led { background: var(--intact); color: var(--intact); }
+  .pillar.wobble .led { background: var(--wobble); color: var(--wobble); }
+  .pillar.broken .led { background: var(--broken); color: var(--broken); animation: pulseBroken 1.5s ease-in-out infinite; }
+  @keyframes pulseBroken {
+    0%, 100% { box-shadow: 0 0 4px var(--broken); }
+    50% { box-shadow: 0 0 10px var(--broken); }
+  }
+  .pillar .name { letter-spacing: 0.02em; }
+  .pillar .val { color: var(--ink-2); margin-left: auto; font-size: 10px; }
+
+  .spark-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--hair);
+  }
+  .spark-label {
+    font-size: 9px;
+    color: var(--ink-2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    min-width: 56px;
+  }
+  .spark { flex: 1; height: 28px; }
+  .spark-meta {
+    font-size: 10px;
+    color: var(--ink-1);
+    text-align: right;
+    min-width: 60px;
+  }
+  .spark-meta b { color: var(--ink-0); }
+
+  .footnote {
+    font-size: 10px;
+    color: var(--ink-2);
+    margin-top: 8px;
+    letter-spacing: 0.03em;
+  }
+  .footnote .new { color: var(--broken); }
+
+  .filters {
+    display: flex;
+    gap: 6px;
+    margin: 8px 2px 12px;
+    overflow-x: auto;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+  .filter {
+    font-size: 10px;
+    padding: 5px 10px;
+    border: 1px solid var(--hair);
+    border-radius: 4px;
+    background: var(--bg-1);
+    color: var(--ink-1);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .filter.active {
+    background: var(--bg-3);
+    color: var(--accent);
+    border-color: rgba(110,231,255,0.3);
+  }
+
+  .ticker-strip {
+    display: flex;
+    overflow-x: auto;
+    gap: 14px;
+    padding: 6px 2px;
+    margin-bottom: 6px;
+    border-top: 1px solid var(--hair);
+    border-bottom: 1px solid var(--hair);
+    background: var(--bg-1);
+  }
+  .ticker-strip::-webkit-scrollbar { display: none; }
+  .ts-item {
+    flex-shrink: 0;
+    font-size: 11px;
+    display: flex; align-items: baseline; gap: 4px;
+  }
+  .ts-item b { color: var(--ink-0); }
+
+  /* Bottom command bar */
+  .cmd {
+    position: absolute;
+    left: 14px; right: 14px; bottom: 24px;
+    height: 56px;
+    background: rgba(10,14,20,0.92);
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .cmd .prompt { color: var(--accent); font-weight: 700; }
+  .cmd .input {
+    flex: 1;
+    font-size: 13px;
+    color: var(--ink-1);
+    font-family: inherit;
+    letter-spacing: 0.02em;
+  }
+  .cmd .input .cursor {
+    display: inline-block; width: 7px; height: 14px;
+    background: var(--accent);
+    vertical-align: -2px;
+    margin-left: 2px;
+    animation: blink 1s steps(2, end) infinite;
+  }
+  .cmd .key {
+    font-size: 9px;
+    padding: 3px 6px;
+    border: 1px solid var(--hair);
+    border-radius: 4px;
+    color: var(--ink-2);
+    background: var(--bg-2);
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="wrap">
+    <div class="caption">
+      <h1>v2 — The Cockpit</h1>
+      <p>Dense thesis dashboard. Every position visible at a glance, pillar health as LEDs, command line at the bottom. Style: terminal / Bloomberg.</p>
+    </div>
+    <div class="phone">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span style="font-size:10px; color: var(--ink-2); letter-spacing: 0.1em;">SESSION · 02:14:08</span>
+      </div>
+      <div class="scroll">
+        <div class="top-row">
+          <div class="breadcrumb">PORTFOLIO / <b>OVERVIEW</b></div>
+          <div class="breadcrumb"><span class="blink">●</span> LIVE · 09:41:06</div>
+        </div>
+
+        <div class="kpi-strip">
+          <div class="kpi">
+            <div class="label">Holdings</div>
+            <div class="value">8</div>
+            <div class="sub">5 active theses</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Alerts</div>
+            <div class="value red">3</div>
+            <div class="sub">1 break · 2 wobble</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Health</div>
+            <div class="value amber">72%</div>
+            <div class="sub">pillars intact</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Wt. Conv</div>
+            <div class="value green">7.4</div>
+            <div class="sub">↓ 0.3 wk</div>
+          </div>
+        </div>
+
+        <div class="ticker-strip">
+          <span class="ts-item"><b>GOOG</b> <span class="chg dn">−0.42</span></span>
+          <span class="ts-item"><b>MSFT</b> <span class="chg up">+0.91</span></span>
+          <span class="ts-item"><b>TSLA</b> <span class="chg dn">−3.40</span></span>
+          <span class="ts-item"><b>NVDA</b> <span class="chg up">+2.11</span></span>
+          <span class="ts-item"><b>META</b> <span class="chg up">+0.66</span></span>
+          <span class="ts-item"><b>AAPL</b> <span class="chg dn">−0.18</span></span>
+        </div>
+
+        <div class="filters">
+          <button class="filter active">All</button>
+          <button class="filter">Alerts</button>
+          <button class="filter">Wobble</button>
+          <button class="filter">Catalysts</button>
+          <button class="filter">By conv</button>
+        </div>
+
+        <div class="section-label">
+          <span class="title">Theses</span>
+          <span class="rule"></span>
+          <span class="meta">sort: <span class="green">severity ↓</span></span>
+        </div>
+
+        <!-- TSLA -->
+        <div class="card alert">
+          <div class="row1">
+            <span class="tkr">TSLA</span>
+            <span class="pos-side long">long</span>
+            <span class="price">172.30 <span class="chg dn">−3.4%</span></span>
+          </div>
+          <div class="row2">
+            <span>conv</span>
+            <span class="conv"><span class="conv-bar"><i style="width:55%"></i></span> <b style="color:var(--ink-0)">5.5</b></span>
+            <span class="sep">·</span>
+            <span>horizon 3y</span>
+            <span class="sep">·</span>
+            <span style="color:var(--broken)">1 BROKEN</span>
+          </div>
+          <div class="pillars">
+            <div class="pillar broken"><span class="led"></span><span class="name">Cybertruck ramp</span><span class="val">1.2k/Q</span></div>
+            <div class="pillar wobble"><span class="led"></span><span class="name">Auto margin</span><span class="val">17%</span></div>
+            <div class="pillar intact"><span class="led"></span><span class="name">Energy storage</span><span class="val">+90% Y</span></div>
+            <div class="pillar intact"><span class="led"></span><span class="name">FSD progress</span><span class="val">v12.4</span></div>
+          </div>
+          <div class="spark-row">
+            <span class="spark-label">Health 30d</span>
+            <svg class="spark" viewBox="0 0 200 28" preserveAspectRatio="none">
+              <polyline fill="none" stroke="#ff4d6d" stroke-width="1.5"
+                points="0,8 14,9 28,7 42,10 56,11 70,9 84,12 98,11 112,14 126,15 140,17 154,18 168,20 182,22 196,24"/>
+              <circle cx="196" cy="24" r="2.5" fill="#ff4d6d"/>
+            </svg>
+            <div class="spark-meta">85% → <b style="color:var(--broken)">50%</b></div>
+          </div>
+          <div class="footnote">▲ <span class="new">Cybertruck pillar BROKE 06m ago</span> · 2 consecutive misses</div>
+        </div>
+
+        <!-- GOOG -->
+        <div class="card warn">
+          <div class="row1">
+            <span class="tkr">GOOG</span>
+            <span class="pos-side long">long</span>
+            <span class="price">168.42 <span class="chg up">+0.8%</span></span>
+          </div>
+          <div class="row2">
+            <span>conv</span>
+            <span class="conv"><span class="conv-bar"><i style="width:80%"></i></span> <b style="color:var(--ink-0)">8.0</b></span>
+            <span class="sep">·</span>
+            <span>horizon 5y</span>
+            <span class="sep">·</span>
+            <span style="color:var(--wobble)">1 WOBBLE</span>
+          </div>
+          <div class="pillars">
+            <div class="pillar wobble"><span class="led"></span><span class="name">Cloud growth</span><span class="val">28% Y</span></div>
+            <div class="pillar intact"><span class="led"></span><span class="name">Search moat</span><span class="val">stable</span></div>
+            <div class="pillar intact"><span class="led"></span><span class="name">AI integ.</span><span class="val">Gemini 2</span></div>
+            <div class="pillar intact"><span class="led"></span><span class="name">Capital ret.</span><span class="val">$70B</span></div>
+            <div class="pillar intact"><span class="led"></span><span class="name">YouTube ads</span><span class="val">+13% Y</span></div>
+          </div>
+          <div class="spark-row">
+            <span class="spark-label">Health 30d</span>
+            <svg class="spark" viewBox="0 0 200 28" preserveAspectRatio="none">
+              <polyline fill="none" stroke="#f5a623" stroke-width="1.5"
+                points="0,6 14,7 28,7 42,6 56,8 70,9 84,9 98,10 112,11 126,11 140,12 154,13 168,13 182,14 196,14"/>
+              <circle cx="196" cy="14" r="2.5" fill="#f5a623"/>
+            </svg>
+            <div class="spark-meta">100% → <b style="color:var(--wobble)">80%</b></div>
+          </div>
+          <div class="footnote">⚠ Cloud growth wobbling · 1 more miss = break</div>
+        </div>
+
+        <!-- MSFT -->
+        <div class="card">
+          <div class="row1">
+            <span class="tkr">MSFT</span>
+            <span class="pos-side long">long</span>
+            <span class="price">408.12 <span class="chg up">+0.5%</span></span>
+          </div>
+          <div class="row2">
+            <span>conv</span>
+            <span class="conv"><span class="conv-bar"><i style="width:90%"></i></span> <b style="color:var(--ink-0)">9.0</b></span>
+            <span class="sep">·</span>
+            <span>horizon 5y</span>
+            <span class="sep">·</span>
+            <span style="color:var(--accent)">Earnings T-18h</span>
+          </div>
+          <div class="pillars">
+            <div class="pillar intact"><span class="led"></span><span class="name">Azure growth</span><span class="val">+31% Y</span></div>
+            <div class="pillar intact"><span class="led"></span><span class="name">Copilot attach</span><span class="val">22%</span></div>
+            <div class="pillar intact"><span class="led"></span><span class="name">OAI alignment</span><span class="val">on-track</span></div>
+            <div class="pillar intact"><span class="led"></span><span class="name">Op margin</span><span class="val">44%</span></div>
+          </div>
+          <div class="footnote">● All intact · catalyst window opens 16:30 PT tomorrow</div>
+        </div>
+
+        <!-- NVDA collapsed -->
+        <div class="card">
+          <div class="row1">
+            <span class="tkr">NVDA</span>
+            <span class="pos-side long">long</span>
+            <span class="price">927.45 <span class="chg up">+2.1%</span></span>
+          </div>
+          <div class="row2">
+            <span>conv</span>
+            <span class="conv"><span class="conv-bar"><i style="width:70%"></i></span> <b style="color:var(--ink-0)">7.0</b></span>
+            <span class="sep">·</span>
+            <span>4 pillars</span>
+            <span class="sep">·</span>
+            <span style="color:var(--intact)">all intact</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cmd">
+        <span class="prompt">›</span>
+        <span class="input">ask analyst…<span class="cursor"></span></span>
+        <span class="key">⌘K</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

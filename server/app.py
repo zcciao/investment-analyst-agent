@@ -43,9 +43,11 @@ from apscheduler.triggers.cron import CronTrigger
 
 from agent.thesis_builder import get_thesis_build_graph
 from agent.thesis_store import Thesis, list_theses, upsert_thesis
+from agent.thesis_validator import get_validate_graph, initial_state_for
 from pydantic import ValidationError as PydanticValidationError
 from watcher.alerts import list_alerts, mark_read, unread_count
-from watcher.engine import run_watcher
+from watcher.engine import run_watcher, run_watcher_for_ticker
+from watcher.runs import last_run, list_runs
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -131,6 +133,12 @@ async def thesis_build(req: ThesisBuildRequest):
     return EventSourceResponse(_stream_thesis_build(req), sep="\n")
 
 
+@app.post("/thesis/{ticker}/validate")
+async def thesis_validate(ticker: str):
+    """Stream a back-check / validation report for an existing thesis."""
+    return EventSourceResponse(_stream_thesis_validate(ticker), sep="\n")
+
+
 @app.post("/thesis/save")
 async def thesis_save(req: ThesisSaveRequest) -> dict:
     try:
@@ -140,6 +148,43 @@ async def thesis_save(req: ThesisSaveRequest) -> dict:
     upsert_thesis(t)
     log.info("[thesis saved] %s", t.ticker)
     return {"ok": True, "ticker": t.ticker}
+
+
+@app.get("/thesis/{ticker}/detail")
+async def thesis_detail(ticker: str, period: str = "1y", news_limit: int = 15) -> dict:
+    """Lightweight read for the per-thesis detail screen: price history + news.
+
+    Picks a sensible default period based on the thesis's entry_date if unset.
+    """
+    from agent.thesis_store import get_thesis
+    from agent.tools import get_price_history, get_recent_news
+    from datetime import datetime, timezone
+
+    ticker = ticker.upper()
+    t = get_thesis(ticker)
+    if t is None:
+        raise HTTPException(status_code=404, detail=f"No thesis for {ticker}")
+
+    # Pick a period that covers the holding window if not explicitly given.
+    if period == "1y" and t.entry_date:
+        try:
+            entry = datetime.fromisoformat(t.entry_date.replace("Z", "+00:00")).date()
+            days = (datetime.now(timezone.utc).date() - entry).days
+            period = (
+                "3mo" if days <= 30
+                else "6mo" if days <= 90
+                else "1y"  if days <= 365
+                else "2y"  if days <= 730
+                else "5y"
+            )
+        except Exception:
+            pass
+
+    history, news = await asyncio.gather(
+        asyncio.to_thread(get_price_history.func, ticker=ticker, period=period),
+        asyncio.to_thread(get_recent_news.func, ticker=ticker, limit=news_limit),
+    )
+    return {"ticker": ticker, "history": history, "news": news}
 
 
 @app.get("/thesis/dashboard")
@@ -185,6 +230,12 @@ async def watcher_run() -> dict:
     return await run_watcher()
 
 
+@app.post("/watcher/run/{ticker}")
+async def watcher_run_one(ticker: str) -> dict:
+    """Trigger a watcher run for a single thesis."""
+    return await run_watcher_for_ticker(ticker)
+
+
 @app.get("/watcher/alerts")
 async def watcher_alerts(unread_only: bool = False) -> list[dict]:
     return [a.model_dump() for a in list_alerts(unread_only=unread_only)]
@@ -203,6 +254,17 @@ class MarkReadRequest(BaseModel):
 async def watcher_mark_read(req: MarkReadRequest) -> dict:
     count = mark_read(req.ids)
     return {"marked_read": count}
+
+
+@app.get("/watcher/runs")
+async def watcher_runs(limit: int = 20) -> list[dict]:
+    return [r.model_dump() for r in list_runs(limit=limit)]
+
+
+@app.get("/watcher/status")
+async def watcher_status() -> dict:
+    r = last_run()
+    return {"last_run": r.model_dump() if r else None}
 
 
 # --------------------------------------------------------------------------- #
@@ -349,6 +411,80 @@ def _wizard_summary(output: dict, step: str) -> dict:
         filled = sum(1 for p in pillars if p.get("current_value"))
         return {"pillars_filled": filled, "total": len(pillars)}
     return {}
+
+
+# --------------------------------------------------------------------------- #
+# Thesis validator streaming
+# --------------------------------------------------------------------------- #
+
+_VALIDATE_NODE_NAMES = {"gather_node", "analyze_node", "done_node"}
+_VALIDATE_NODE_STEP = {n: n.replace("_node", "") for n in _VALIDATE_NODE_NAMES}
+
+
+def _validate_summary(output: dict, step: str) -> dict:
+    """Compact per-step payload for the UI progress strip."""
+    if step == "gather":
+        hist = output.get("history") or {}
+        return {
+            "period": hist.get("period"),
+            "history_points": len(hist.get("closes") or []),
+            "alerts": len(output.get("alerts") or []),
+        }
+    if step == "analyze":
+        v = output.get("validation") or {}
+        return {
+            "recommendation": v.get("recommendation"),
+            "pillar_reviews": len(v.get("pillar_reviews") or []),
+        }
+    return {}
+
+
+async def _stream_thesis_validate(ticker: str) -> AsyncIterator[dict]:
+    state = initial_state_for(ticker)
+    if state is None:
+        yield _sse("error", {"message": f"No thesis on file for {ticker.upper()}."})
+        yield _sse("done", {})
+        return
+
+    graph = get_validate_graph()
+    log.info("[thesis validate] ticker=%s", ticker.upper())
+    try:
+        async for event in graph.astream_events(state, version="v2"):
+            ev_kind = event["event"]
+            ev_name = event.get("name", "")
+            if ev_name not in _VALIDATE_NODE_NAMES:
+                continue
+
+            step = _VALIDATE_NODE_STEP[ev_name]
+
+            if ev_kind == "on_chain_start":
+                yield _sse("step_start", {"step": step})
+
+            elif ev_kind == "on_chain_end":
+                output = event.get("data", {}).get("output", {}) or {}
+                if output.get("error"):
+                    yield _sse("error", {"message": output["error"]})
+                    yield _sse("done", {})
+                    return
+
+                yield _sse("step_done", {"step": step, "data": _validate_summary(output, step)})
+
+                if step == "done" and output.get("validation"):
+                    yield _sse(
+                        "validation_ready",
+                        {
+                            "ticker": state["ticker"],
+                            "thesis": state["thesis"],
+                            "validation": output["validation"],
+                        },
+                    )
+
+        yield _sse("done", {})
+
+    except Exception as e:
+        log.exception("thesis validate stream failed")
+        yield _sse("error", {"message": str(e)})
+        yield _sse("done", {})
 
 
 # --------------------------------------------------------------------------- #

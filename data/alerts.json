@@ -19,6 +19,28 @@
     "reasoning": "The stock price has surged to $803.63, resulting in a market capitalization of over $906 billion, which implies a massive expansion in valuation multiples far beyond the original forward P/E of 7.53. Given the extreme price appreciation from a year low of $90.93, the forward P/E is almost certainly well above the 15x threshold break condition.",
     "confidence": 9,
     "created_at": "2026-05-14T05:00:16.300022+00:00",
-    "read": false
+    "read": true
+  },
+  {
+    "id": "42280fea-1499-40fe-a7ac-5c143a559327",
+    "ticker": "MU",
+    "pillar_name": "AI Demand Growth",
+    "old_status": "intact",
+    "new_status": "strengthening",
+    "reasoning": "Recent market reports continue to highlight an 'AI memory boom' and sustained hyperscaler AI spending, reinforcing the demand pillar. The sector remains characterized by supply constraints and high valuation growth, moving further away from the failure condition of an easing shortage.",
+    "confidence": 9,
+    "created_at": "2026-05-16T18:31:52.819830+00:00",
+    "read": true
+  },
+  {
+    "id": "09fdcad3-f42f-4125-904d-350e6104b855",
+    "ticker": "MU",
+    "pillar_name": "AI Demand Growth",
+    "old_status": "intact",
+    "new_status": "strengthening",
+    "reasoning": "Recent market reports continue to highlight an 'AI memory boom' and sustained hyperscaler AI spending, reinforcing the demand pillar. The sector remains characterized by supply constraints and high valuation growth, moving further away from the failure condition of an easing shortage.",
+    "confidence": 9,
+    "created_at": "2026-05-16T18:31:59.776325+00:00",
+    "read": true
   }
 ]

@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>v1 — The Briefing</title>
+<style>
+  :root {
+    --bg: #f3f4f6;
+    --ink: #0b0d12;
+    --ink-2: #4b5563;
+    --ink-3: #9ca3af;
+    --card: #ffffff;
+    --hair: #e5e7eb;
+    --rose-50: #fff1f2;
+    --rose-200: #fecdd3;
+    --rose-700: #be123c;
+    --amber-50: #fffbeb;
+    --amber-200: #fde68a;
+    --amber-700: #b45309;
+    --sky-50: #f0f9ff;
+    --sky-200: #bae6fd;
+    --sky-700: #0369a1;
+    --emerald-50: #ecfdf5;
+    --emerald-700: #047857;
+    --violet-700: #6d28d9;
+    --shadow: 0 2px 8px rgba(15,23,42,0.04), 0 1px 2px rgba(15,23,42,0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #e8eaef;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 32px 16px;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .caption {
+    width: 100%;
+    max-width: 720px;
+    text-align: center;
+    margin: 8px auto 24px;
+    color: #475569;
+  }
+  .caption h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .caption p { font-size: 14px; margin: 0; color: #6b7280; }
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    border: 10px solid #0b0d12;
+    box-shadow: 0 30px 80px rgba(2,6,23,0.18), 0 6px 14px rgba(2,6,23,0.10);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .statusbar {
+    height: 44px;
+    padding: 0 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .statusbar .right { display: flex; gap: 6px; align-items: center; opacity: 0.85; }
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 18px 100px;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+  header.page {
+    padding: 12px 4px 18px;
+  }
+  header.page .date { font-size: 13px; color: var(--ink-3); letter-spacing: 0.02em; text-transform: uppercase; font-weight: 600; }
+  header.page h1 { font-size: 32px; margin: 4px 0 0; letter-spacing: -0.02em; font-weight: 700; }
+  header.page .sub { font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+  .section-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 18px 4px 10px;
+  }
+  .section-label .title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .section-label .count {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-weight: 600;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--hair);
+    border-radius: 18px;
+    padding: 16px 16px 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .card .row1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pill.break { background: var(--rose-50); color: var(--rose-700); border: 1px solid var(--rose-200); }
+  .pill.wobble { background: var(--amber-50); color: var(--amber-700); border: 1px solid var(--amber-200); }
+  .pill.fyi { background: var(--sky-50); color: var(--sky-700); border: 1px solid var(--sky-200); }
+  .pill.catalyst { background: #f5f3ff; color: var(--violet-700); border: 1px solid #ddd6fe; }
+  .ticker {
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+  }
+  .ticker .price { color: var(--ink-3); font-weight: 500; margin-left: 6px; font-size: 13px; }
+  .time {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--ink-3);
+    font-weight: 500;
+  }
+  .headline {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    margin: 2px 0 8px;
+  }
+  .evidence {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .chip {
+    font-size: 11px;
+    padding: 3px 8px;
+    background: #f3f4f6;
+    border: 1px solid var(--hair);
+    border-radius: 6px;
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .chip.bear { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+  .body {
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .body b { color: var(--ink); font-weight: 600; }
+  .pillar-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ink-2);
+    padding: 6px 0;
+  }
+  .pillar-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pillar-dot.intact { background: #10b981; }
+  .pillar-dot.wobble { background: #f59e0b; }
+  .pillar-dot.broken { background: #ef4444; }
+  .pillar-line .arrow { color: var(--ink-3); margin: 0 2px; font-size: 11px; }
+  .pillar-line .new { color: var(--rose-700); font-weight: 600; }
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .btn {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 0;
+    border-radius: 10px;
+    border: 1px solid var(--hair);
+    background: white;
+    color: var(--ink);
+    cursor: pointer;
+    letter-spacing: -0.01em;
+  }
+  .btn.primary { background: var(--ink); color: white; border-color: var(--ink); }
+  .btn.ghost { background: transparent; }
+
+  /* FYI compact rows */
+  .fyi-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .fyi-row .ticker { font-size: 14px; min-width: 50px; }
+  .fyi-row .text { font-size: 13px; color: var(--ink-2); line-height: 1.35; flex: 1; }
+  .fyi-row .text b { color: var(--ink); font-weight: 600; }
+  .fyi-row .time { font-size: 11px; }
+
+  /* Watcher pulse */
+  .watcher {
+    margin: 18px 4px 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-3);
+    font-weight: 500;
+  }
+  .pulse-dot {
+    width: 7px; height: 7px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 2.5s infinite;
+    box-shadow: 0 0 0 0 rgba(16,185,129,0.6);
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+    100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+  }
+
+  /* Tab bar */
+  .tabbar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 84px;
+    background: rgba(255,255,255,0.92);
+    border-top: 1px solid var(--hair);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0 24px;
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--ink-3);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .tab.active { color: var(--ink); }
+  .tab .icon {
+    width: 24px; height: 24px;
+    display: grid; place-items: center;
+    font-size: 18px;
+  }
+  .badge {
+    position: absolute;
+    top: -2px; right: -8px;
+    background: #ef4444; color: white;
+    font-size: 9px; font-weight: 700;
+    padding: 1px 5px; border-radius: 8px;
+  }
+  .tab .icon-wrap { position: relative; }
+
+  /* Severity stripe on left of card */
+  .card.severity-break { border-left: 3px solid var(--rose-700); }
+  .card.severity-wobble { border-left: 3px solid var(--amber-700); }
+  .card.severity-catalyst { border-left: 3px solid var(--violet-700); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div>
+    <div class="caption">
+      <h1>v1 — The Briefing</h1>
+      <p>Push-first. The app opens to a curated inbox of what changed and what to do about it. Style: minimalist consumer.</p>
+    </div>
+    <div class="phone">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span class="right">
+          <svg width="16" height="11" viewBox="0 0 16 11"><path d="M0 8h2v3H0zM4 6h2v5H4zM8 4h2v7H8zM12 1h2v10h-2z" fill="currentColor"/></svg>
+          <svg width="15" height="11" viewBox="0 0 15 11"><path d="M7.5 0c2.6 0 5 1 6.8 2.7l-1 1A8 8 0 0 0 7.5 1.4 8 8 0 0 0 1.7 3.7l-1-1A9.6 9.6 0 0 1 7.5 0Zm0 3.5c1.7 0 3.3.6 4.5 1.8l-1 1a5 5 0 0 0-7 0l-1-1A6.3 6.3 0 0 1 7.5 3.5ZM7.5 7a3 3 0 0 1 2.1.9l-2.1 2-2.1-2A3 3 0 0 1 7.5 7Z" fill="currentColor"/></svg>
+          <svg width="24" height="11" viewBox="0 0 24 11"><rect x="0.5" y="0.5" width="20" height="10" rx="2" fill="none" stroke="currentColor"/><rect x="2" y="2" width="17" height="7" rx="1" fill="currentColor"/><rect x="21" y="3.5" width="1.5" height="4" rx="0.5" fill="currentColor"/></svg>
+        </span>
+      </div>
+      <div class="scroll">
+        <header class="page">
+          <div class="date">Fri · May 15</div>
+          <h1>Briefing</h1>
+          <div class="sub">3 things moved on your watchlist overnight.</div>
+        </header>
+
+        <div class="watcher">
+          <span class="pulse-dot"></span>
+          <span>Watcher ran 6 min ago · Markets · News · Social · Fundamentals</span>
+        </div>
+
+        <div class="section-label">
+          <span class="title">Needs your attention</span>
+          <span class="count">2</span>
+        </div>
+
+        <div class="card severity-break">
+          <div class="row1">
+            <span class="pill break">Thesis Break</span>
+            <span class="ticker">TSLA <span class="price">$172.30 · −3.4%</span></span>
+            <span class="time">6m</span>
+          </div>
+          <div class="headline">Cybertruck delivery pillar is broken.</div>
+          <div class="body">
+            Q1 deliveries came in at <b>1.2k</b> vs. your <b>threshold ≥10k for 2 quarters</b>. Second consecutive miss.
+          </div>
+          <div class="pillar-line">
+            <span class="pillar-dot wobble"></span>
+            <span>Cybertruck ramp</span>
+            <span class="arrow">→</span>
+            <span class="pillar-dot broken"></span>
+            <span class="new">broken</span>
+          </div>
+          <div class="evidence">
+            <span class="chip">10-Q · pg 14</span>
+            <span class="chip">Investor letter</span>
+            <span class="chip bear">2 prior misses</span>
+          </div>
+          <div class="actions">
+            <button class="btn primary">Open thesis</button>
+            <button class="btn">Ask analyst</button>
+          </div>
+        </div>
+
+        <div class="card severity-wobble">
+          <div class="row1">
+            <span class="pill wobble">Pillar Wobble</span>
+            <span class="ticker">GOOG <span class="price">$168.42 · +0.8%</span></span>
+            <span class="time">1h</span>
+          </div>
+          <div class="headline">Cloud growth decelerated for the second quarter.</div>
+          <div class="body">
+            GCP growth came in at <b>28% YoY</b>, vs. your pillar threshold of <b>≥30%</b>. One more quarter under and this pillar breaks.
+          </div>
+          <div class="pillar-line">
+            <span class="pillar-dot intact"></span>
+            <span>Cloud growth</span>
+            <span class="arrow">→</span>
+            <span class="pillar-dot wobble"></span>
+            <span class="new">wobbling</span>
+          </div>
+          <div class="evidence">
+            <span class="chip">Q1 earnings call</span>
+            <span class="chip">FactSet est.</span>
+            <span class="chip">2 of 5 pillars</span>
+          </div>
+          <div class="actions">
+            <button class="btn primary">Open thesis</button>
+            <button class="btn">Snooze 7d</button>
+          </div>
+        </div>
+
+        <div class="section-label">
+          <span class="title">Upcoming catalysts</span>
+          <span class="count">1</span>
+        </div>
+
+        <div class="card severity-catalyst">
+          <div class="row1">
+            <span class="pill catalyst">Catalyst · Tomorrow</span>
+            <span class="ticker">MSFT <span class="price">$408.12</span></span>
+            <span class="time">in 18h</span>
+          </div>
+          <div class="headline">Q3 earnings · 4:30pm PT</div>
+          <div class="body">
+            Watching: <b>Azure growth</b>, <b>Copilot attach rate</b>, <b>capex guide</b>. I'll write a preview at 2pm and a debrief within 30m of the call.
+          </div>
+          <div class="actions">
+            <button class="btn">Preview brief</button>
+            <button class="btn">Edit watchlist</button>
+          </div>
+        </div>
+
+        <div class="section-label">
+          <span class="title">FYI</span>
+          <span class="count">4</span>
+        </div>
+
+        <div class="fyi-row">
+          <span class="ticker">NVDA</span>
+          <div class="text">Morgan Stanley raised PT to <b>$1,100</b>. No pillar impact.</div>
+          <span class="time">3h</span>
+        </div>
+        <div class="fyi-row">
+          <span class="ticker">META</span>
+          <div class="text">Reels monetization commentary lines up with your <b>ARPU pillar</b>.</div>
+          <span class="time">5h</span>
+        </div>
+        <div class="fyi-row">
+          <span class="ticker">AAPL</span>
+          <div class="text">India production share crossed <b>14%</b>. Long-tail signal.</div>
+          <span class="time">8h</span>
+        </div>
+        <div class="fyi-row">
+          <span class="ticker">AMZN</span>
+          <div class="text">AWS reorg announced. Watching for impact on your <b>op-margin pillar</b>.</div>
+          <span class="time">11h</span>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <div class="tab active">
+          <div class="icon-wrap">
+            <div class="icon">●</div>
+            <span class="badge">3</span>
+          </div>
+          <div>Briefing</div>
+        </div>
+        <div class="tab">
+          <div class="icon">◫</div>
+          <div>Theses</div>
+        </div>
+        <div class="tab">
+          <div class="icon">✦</div>
+          <div>Ask</div>
+        </div>
+        <div class="tab">
+          <div class="icon">⌥</div>
+          <div>You</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

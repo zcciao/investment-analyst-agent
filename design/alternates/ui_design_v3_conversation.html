@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>v3 — The Conversation</title>
+<style>
+  :root {
+    --paper: #fbf7f0;
+    --paper-2: #f5efe4;
+    --ink: #2d2a26;
+    --ink-2: #6b6359;
+    --ink-3: #a39a8c;
+    --hair: #e9e1d2;
+    --accent: #b56b2a;
+    --accent-soft: #f6e8d6;
+    --green: #4a7a3a;
+    --green-soft: #e8efde;
+    --rose: #a23d3d;
+    --rose-soft: #f5e0e0;
+    --amber: #a87423;
+    --amber-soft: #f6e8c8;
+    --user-bg: #2d2a26;
+    --user-ink: #fbf7f0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #e5dccb;
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Charter", Georgia, "Times New Roman", serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sans { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+  .wrap { width: 100%; max-width: 720px; }
+  .caption {
+    text-align: center;
+    margin: 8px auto 24px;
+    color: #6b6359;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  .caption h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; color: #2d2a26; }
+  .caption p { font-size: 14px; margin: 0; color: #8b8276; }
+  .phone {
+    width: 390px;
+    height: 844px;
+    margin: 0 auto;
+    background: var(--paper);
+    border-radius: 44px;
+    border: 10px solid #1c1814;
+    box-shadow: 0 30px 80px rgba(80,50,20,0.18), 0 6px 14px rgba(80,50,20,0.10);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(181,107,42,0.04), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(74,122,58,0.04), transparent 40%);
+  }
+  .statusbar {
+    height: 44px;
+    padding: 0 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    flex-shrink: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  .topbar {
+    padding: 8px 18px 14px;
+    border-bottom: 1px solid var(--hair);
+    background: var(--paper);
+    flex-shrink: 0;
+  }
+  .topbar .row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #d18a4f);
+    color: var(--paper);
+    display: grid; place-items: center;
+    font-weight: 700;
+    font-size: 15px;
+    font-family: Georgia, serif;
+    box-shadow: 0 2px 4px rgba(80,50,20,0.15);
+  }
+  .topbar .name {
+    font-family: Georgia, serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  .topbar .status {
+    font-size: 11px;
+    color: var(--ink-2);
+    display: flex; align-items: center; gap: 5px;
+    margin-top: 1px;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  .topbar .status .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); display: inline-block;
+  }
+  .topbar .menu {
+    margin-left: auto;
+    color: var(--ink-3);
+    font-size: 20px;
+  }
+  .pinned {
+    margin-top: 12px;
+    background: var(--accent-soft);
+    border: 1px solid #ebd5b5;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  .pinned .icon {
+    font-size: 14px;
+    color: var(--accent);
+  }
+  .pinned .text {
+    flex: 1;
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .pinned .text b { font-weight: 700; }
+  .pinned .chev { color: var(--accent); font-size: 14px; }
+
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 18px 130px;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+  .day-divider {
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    font-weight: 600;
+    margin: 6px 0 16px;
+  }
+
+  .msg { margin-bottom: 16px; }
+  .msg.assistant { max-width: 100%; }
+  .msg.user {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .msg.user .bubble {
+    background: var(--user-bg);
+    color: var(--user-ink);
+    padding: 10px 14px;
+    border-radius: 20px 20px 6px 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    font-size: 14px;
+    max-width: 78%;
+    line-height: 1.45;
+  }
+  .msg.assistant .body {
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .msg.assistant .body p { margin: 0 0 10px; }
+  .msg.assistant .body b { font-weight: 700; }
+  .msg.assistant .body .num {
+    font-family: "Iowan Old Style", Georgia, serif;
+    font-variant-numeric: oldstyle-nums;
+    font-weight: 700;
+  }
+  .msg.assistant .body sup.cite {
+    color: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 10px;
+    margin: 0 1px;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    vertical-align: top;
+    line-height: 1;
+  }
+
+  /* Proactive thesis-update card (push as a chat block) */
+  .proactive {
+    background: var(--paper-2);
+    border: 1px solid var(--hair);
+    border-left: 3px solid var(--rose);
+    border-radius: 4px 14px 14px 14px;
+    padding: 14px 14px 12px;
+    margin-bottom: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  .proactive .header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--rose);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .proactive .header .tag {
+    background: var(--rose-soft);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .proactive .header .time {
+    margin-left: auto;
+    color: var(--ink-3);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .proactive h3 {
+    font-family: "Iowan Old Style", Georgia, serif;
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+  .proactive .lede {
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .proactive .lede b { color: var(--ink); font-weight: 700; }
+  .pillar-flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--paper);
+    border: 1px solid var(--hair);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--ink-2);
+    margin-bottom: 10px;
+  }
+  .pillar-flow .name { color: var(--ink); font-weight: 600; }
+  .pillar-flow .from {
+    color: var(--amber);
+    font-weight: 600;
+  }
+  .pillar-flow .arrow { color: var(--ink-3); }
+  .pillar-flow .to {
+    color: var(--rose);
+    font-weight: 700;
+  }
+
+  /* Tool call inline */
+  .tool-call {
+    background: transparent;
+    border: 1px dashed var(--hair);
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin: 8px 0 12px;
+    font-size: 12px;
+    color: var(--ink-2);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tool-call .head {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--ink-3);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+  }
+  .tool-call .head .pulse {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+  }
+  .tool-call .step {
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+  .tool-call .step.done { color: var(--ink); }
+  .tool-call .step.done::before { content: "✓ "; color: var(--green); font-weight: 700; }
+  .tool-call .step.active::before { content: "▸ "; color: var(--accent); font-weight: 700; }
+
+  /* Sources */
+  .sources {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--hair);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  .sources .label {
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .sources .list {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .src {
+    display: flex; align-items: baseline; gap: 6px;
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+  .src .n {
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* Quick replies */
+  .quick {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin: 10px 0 4px;
+    padding-bottom: 4px;
+  }
+  .quick::-webkit-scrollbar { display: none; }
+  .qr {
+    flex-shrink: 0;
+    font-size: 13px;
+    background: var(--paper);
+    border: 1px solid var(--hair);
+    color: var(--ink);
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    font-weight: 500;
+  }
+  .qr.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  /* Composer */
+  .composer {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    background: var(--paper);
+    border-top: 1px solid var(--hair);
+    padding: 10px 14px 28px;
+  }
+  .suggestions {
+    display: flex; gap: 6px; overflow-x: auto; margin-bottom: 8px;
+  }
+  .suggestions::-webkit-scrollbar { display: none; }
+  .sg {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--ink-2);
+    background: var(--paper-2);
+    border: 1px solid var(--hair);
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  .sg b { color: var(--ink); font-weight: 600; }
+  .input-row {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--paper-2);
+    border: 1px solid var(--hair);
+    border-radius: 22px;
+    padding: 8px 8px 8px 16px;
+  }
+  .input-row input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    color: var(--ink);
+    outline: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  .input-row input::placeholder { color: var(--ink-3); }
+  .send {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    display: grid; place-items: center;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* Sub-tab tabs */
+  .threads {
+    display: flex; gap: 6px;
+    margin-top: 10px;
+    overflow-x: auto;
+  }
+  .threads::-webkit-scrollbar { display: none; }
+  .thread {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--ink-2);
+    padding: 4px 10px;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    background: var(--paper);
+  }
+  .thread.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .thread .dot {
+    display: inline-block; width: 5px; height: 5px;
+    border-radius: 50%; background: var(--rose);
+    margin-right: 4px; vertical-align: 2px;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="wrap">
+    <div class="caption">
+      <h1>v3 — The Conversation</h1>
+      <p>Chat-first. The Analyst writes; pushes arrive as proactive messages. Style: warm notebook / Notion-like.</p>
+    </div>
+    <div class="phone">
+      <div class="statusbar">
+        <span>9:41</span>
+        <span style="font-size:11px; color: var(--ink-2);">Watcher synced 6m ago</span>
+      </div>
+      <div class="topbar">
+        <div class="row">
+          <div class="avatar">A</div>
+          <div>
+            <div class="name">Analyst</div>
+            <div class="status"><span class="dot"></span>Watching 5 theses · Supervisor on</div>
+          </div>
+          <div class="menu">⋯</div>
+        </div>
+        <div class="pinned">
+          <span class="icon">✦</span>
+          <span class="text"><b>Today's briefing.</b> 1 pillar broke, 1 wobbling, 1 catalyst tomorrow.</span>
+          <span class="chev">›</span>
+        </div>
+        <div class="threads">
+          <span class="thread active">All</span>
+          <span class="thread"><span class="dot"></span>TSLA</span>
+          <span class="thread"><span class="dot"></span>GOOG</span>
+          <span class="thread">MSFT</span>
+          <span class="thread">NVDA</span>
+          <span class="thread">+ new</span>
+        </div>
+      </div>
+
+      <div class="scroll">
+        <div class="day-divider">Today · May 15</div>
+
+        <!-- Proactive push -->
+        <div class="msg assistant">
+          <div class="proactive">
+            <div class="header">
+              <span class="tag">Thesis Break</span>
+              <span>TSLA</span>
+              <span class="time">9:32 AM</span>
+            </div>
+            <h3>The Cybertruck ramp pillar broke this morning.</h3>
+            <div class="lede">
+              Q1 delivery numbers came in at <b>1,200 units</b> — your threshold was <b>≥10k for two consecutive quarters</b>, and this is the second straight miss.
+            </div>
+            <div class="pillar-flow">
+              <span class="name">Cybertruck ramp</span>
+              <span class="from">wobbling</span>
+              <span class="arrow">→</span>
+              <span class="to">broken</span>
+            </div>
+            <div class="quick">
+              <button class="qr primary">Dig deeper</button>
+              <button class="qr">Open thesis</button>
+              <button class="qr">Snooze 24h</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- User reply -->
+        <div class="msg user">
+          <div class="bubble">ok dig deeper. is the rest of the thesis ok?</div>
+        </div>
+
+        <!-- Tool call indicator -->
+        <div class="msg assistant">
+          <div class="tool-call">
+            <div class="head"><span class="pulse"></span>Analyst · pulling evidence</div>
+            <div class="step done">Read TSLA thesis (5 pillars)</div>
+            <div class="step done">Pulled Q1 investor letter, 10-Q pg 14</div>
+            <div class="step done">Scanned 24h news for "cybertruck", "auto margin"</div>
+            <div class="step active">Drafting summary…</div>
+          </div>
+
+          <div class="body">
+            <p>
+              The short answer: <b>only the Cybertruck pillar is broken — but auto margin is starting to wobble too.</b>
+            </p>
+            <p>
+              Cybertruck deliveries were <span class="num">1,200</span> in Q1<sup class="cite">1</sup>, vs. your threshold of <span class="num">10,000</span> for two straight quarters. Q4 came in at <span class="num">2,500</span>. That's the trigger — the pillar is officially broken under your own rule.
+            </p>
+            <p>
+              Two other pillars are doing fine. Energy storage grew <span class="num">+90%</span> YoY<sup class="cite">2</sup> and FSD shipped v12.4 to ~<span class="num">450k</span> users<sup class="cite">3</sup>. Both are intact.
+            </p>
+            <p>
+              The one I'd actually watch is <b>auto gross margin</b>: <span class="num">17.4%</span> this quarter, down from <span class="num">19.3%</span><sup class="cite">1</sup>. Still above your <span class="num">15%</span> threshold, but the slope is the same direction as Cybertruck.
+            </p>
+            <p style="color: var(--ink-2); font-size: 14px; font-style: italic;">
+              I'd want a fresh thesis: either revise the Cybertruck pillar (lower threshold, longer horizon) or accept that the original bull case has materially changed. Don't add until that's settled — flagging because you've added on Cybertruck dips twice before.
+            </p>
+
+            <div class="sources">
+              <div class="label">Sources</div>
+              <div class="list">
+                <div class="src"><span class="n">[1]</span> TSLA Q1 2026 10-Q · p.14 (deliveries, auto margin)</div>
+                <div class="src"><span class="n">[2]</span> TSLA Q1 shareholder letter · energy section</div>
+                <div class="src"><span class="n">[3]</span> Investor day deck · FSD ramp slide</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="quick">
+            <button class="qr primary">Revise thesis</button>
+            <button class="qr">Show pillar history</button>
+            <button class="qr">Add to journal</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="suggestions">
+          <span class="sg">What's the bear case on <b>GOOG</b>?</span>
+          <span class="sg">Preview <b>MSFT</b> earnings</span>
+          <span class="sg">Wobbling positions</span>
+        </div>
+        <div class="input-row">
+          <input placeholder="Ask the analyst…" />
+          <button class="send">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

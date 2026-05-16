@@ -72,14 +72,14 @@
     "pillars": [
       {
         "name": "AI Demand Growth",
-        "current_value": "AI memory boom continues to drive stock price appreciation and positive analyst revisions (GuruFocus.com, 2026-05-14)",
+        "current_value": "AI memory demand continues to drive record results and long-term HBM contracts (Insider Monkey, 2026-05-16)",
         "threshold_break": "Quarterly revenue growth from AI-related memory products turns negative or industry-wide memory-chip shortage eases significantly",
         "watch_signals": [
           "Quarterly earnings reports",
           "Industry DRAM/NAND pricing indices",
           "Barrons.com industry shortage analysis"
         ],
-        "status": "intact"
+        "status": "strengthening"
       },
       {
         "name": "Valuation Discipline",
@@ -108,8 +108,9 @@
     "journal": [
       "2026-05-13: Initial thesis created from user note.",
       "2026-05-13: Updated with live financials (Forward P/E 7.53) and market context regarding AI bottleneck status.",
-      "2026-05-14: Watcher update \u2014 Valuation Discipline: intact\u2192broken."
+      "2026-05-14: Watcher update \u2014 Valuation Discipline: intact\u2192broken.",
+      "2026-05-16: Watcher update \u2014 AI Demand Growth: intact\u2192strengthening."
     ],
-    "last_updated": "2026-05-14T11:10:29.783629+00:00"
+    "last_updated": "2026-05-16T18:32:00.804882+00:00"
   }
 }

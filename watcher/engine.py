@@ -34,8 +34,11 @@ log = logging.getLogger("watcher")
 # ---------------------------------------------------------------------------
 
 _PILLAR_EVAL_PROMPT = """\
-You are a precise investment thesis monitor. Evaluate whether a thesis pillar
-is still holding, wobbling, or broken based on current market data.
+You are a precise investment thesis monitor. Evaluate the pillar's status —
+intact, wobbling, broken, or strengthening — based on current market data.
+
+The threshold_break describes the FAILURE condition (the bad direction).
+Status moves AWAY from that direction = good. Status moves TOWARD it = bad.
 
 PILLAR
 Name: {name}
@@ -57,14 +60,17 @@ CURRENT DATA FOR {ticker}
 Based only on the data above, assess the pillar's status.
 
 Respond with raw JSON only — no markdown fences:
-{{"status": "intact"|"wobbling"|"broken", "current_value": "<updated one-line reading with source and date>", "reasoning": "<2-3 sentences citing specific data>", "confidence": <1-10>}}
+{{"status": "intact"|"wobbling"|"broken"|"strengthening", "current_value": "<updated one-line reading with source and date>", "reasoning": "<2-3 sentences citing specific data>", "confidence": <1-10>}}
 
 Definitions:
-- "intact"   : threshold condition clearly not triggered; pillar is holding.
-- "wobbling" : threshold condition is being approached, or meaningful new risk has emerged.
-- "broken"   : threshold condition appears to have been triggered.
+- "intact"        : within normal range; threshold is not at risk in either direction.
+- "wobbling"      : the threshold_break (failure condition) is being approached, or meaningful new risk has emerged.
+- "broken"        : the threshold_break (failure condition) appears to have been TRIGGERED — i.e., reality moved in the bad direction past the line.
+- "strengthening" : reality is dramatically BETTER than expected — well clear of the threshold in the favorable direction, with a material improvement vs. the recorded value. Reserved for genuine upside surprises, not routine performance.
 
 Rules:
+- "broken" means adverse breach only. Numbers exceeding the bullish expectation are NEVER "broken" — they are "strengthening" or remain "intact".
+- "strengthening" requires both: (a) the metric is far from the failure condition, AND (b) a meaningful improvement over the recorded value. Don't use it for normal-range readings.
 - current_value: write a fresh one-line factual reading using the data above, e.g.
   "Forward P/E ~23x (Yahoo Finance, 2026-05-14)". Include source and date.
   If you cannot extract a specific figure, copy the existing recorded value unchanged.
@@ -159,7 +165,7 @@ def _evaluate_pillar_sync(
     try:
         result = json.loads(raw)
         # Validate status field
-        if result.get("status") not in ("intact", "wobbling", "broken"):
+        if result.get("status") not in ("intact", "wobbling", "broken", "strengthening"):
             result["status"] = pillar.status
         return result
     except json.JSONDecodeError:
@@ -241,6 +247,36 @@ async def check_thesis(thesis: Thesis) -> list[Alert]:
     return alerts
 
 
+async def run_watcher_for_ticker(ticker: str) -> dict:
+    """Run the watcher for a single thesis. Returns a summary dict."""
+    from agent.thesis_store import get_thesis
+    ticker = ticker.upper()
+    thesis = get_thesis(ticker)
+    if thesis is None:
+        return {"checked": 0, "new_alerts": 0, "results": [], "error": f"No thesis for {ticker}"}
+
+    try:
+        alerts = await check_thesis(thesis)
+        result = {"ticker": ticker, "alerts": len(alerts), "ok": True}
+    except Exception as e:
+        log.exception("[watcher] %s failed", ticker)
+        alerts = []
+        result = {"ticker": ticker, "ok": False, "error": str(e)}
+
+    append_alerts(alerts)
+
+    summary = {
+        "checked": 1,
+        "new_alerts": len(alerts),
+        "results": [result],
+        "ran_at": datetime.now(timezone.utc).isoformat(),
+    }
+    from watcher.runs import append_run
+    append_run(summary)
+    log.info("[watcher] %s done — %d new alerts", ticker, len(alerts))
+    return summary
+
+
 async def run_watcher() -> dict:
     """Run the watcher for every thesis. Returns a summary dict."""
     theses = list_theses()
@@ -268,5 +304,7 @@ async def run_watcher() -> dict:
         "results": results,
         "ran_at": datetime.now(timezone.utc).isoformat(),
     }
+    from watcher.runs import append_run
+    append_run(summary)
     log.info("[watcher] done — %d theses, %d new alerts", len(theses), len(all_alerts))
     return summary
