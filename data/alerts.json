@@ -2,45 +2,56 @@
   {
     "id": "622d86e7-41fa-4c9a-827c-eaf5ca7b4cad",
     "ticker": "GOOG",
-    "pillar_name": "Search remains the cash engine",
-    "old_status": "intact",
-    "new_status": "wobbling",
+    "old_status": "on_track",
+    "new_status": "at_risk",
     "reasoning": "While there is no direct evidence of a decline in Search revenue, the competitive landscape is intensifying with Amazon unveiling an AI search overhaul to defend its dominance. This development, combined with ongoing AI-driven competition from Microsoft and Anthropic, increases the risk to Google's core search engine cash engine.",
     "confidence": 7,
     "created_at": "2026-05-14T05:00:06.782201+00:00",
-    "read": false
+    "read": true,
+    "reason_name": "Search remains the cash engine"
   },
   {
     "id": "6fbb332e-db4c-48f2-a250-7ba9c585f938",
     "ticker": "MU",
-    "pillar_name": "Valuation Discipline",
-    "old_status": "intact",
-    "new_status": "broken",
+    "old_status": "on_track",
+    "new_status": "off_track",
     "reasoning": "The stock price has surged to $803.63, resulting in a market capitalization of over $906 billion, which implies a massive expansion in valuation multiples far beyond the original forward P/E of 7.53. Given the extreme price appreciation from a year low of $90.93, the forward P/E is almost certainly well above the 15x threshold break condition.",
     "confidence": 9,
     "created_at": "2026-05-14T05:00:16.300022+00:00",
-    "read": true
+    "read": true,
+    "reason_name": "Valuation Discipline"
   },
   {
     "id": "42280fea-1499-40fe-a7ac-5c143a559327",
     "ticker": "MU",
-    "pillar_name": "AI Demand Growth",
-    "old_status": "intact",
-    "new_status": "strengthening",
+    "old_status": "on_track",
+    "new_status": "ahead",
     "reasoning": "Recent market reports continue to highlight an 'AI memory boom' and sustained hyperscaler AI spending, reinforcing the demand pillar. The sector remains characterized by supply constraints and high valuation growth, moving further away from the failure condition of an easing shortage.",
     "confidence": 9,
     "created_at": "2026-05-16T18:31:52.819830+00:00",
-    "read": true
+    "read": true,
+    "reason_name": "AI Demand Growth"
   },
   {
     "id": "09fdcad3-f42f-4125-904d-350e6104b855",
     "ticker": "MU",
-    "pillar_name": "AI Demand Growth",
-    "old_status": "intact",
-    "new_status": "strengthening",
+    "old_status": "on_track",
+    "new_status": "ahead",
     "reasoning": "Recent market reports continue to highlight an 'AI memory boom' and sustained hyperscaler AI spending, reinforcing the demand pillar. The sector remains characterized by supply constraints and high valuation growth, moving further away from the failure condition of an easing shortage.",
     "confidence": 9,
     "created_at": "2026-05-16T18:31:59.776325+00:00",
-    "read": true
+    "read": true,
+    "reason_name": "AI Demand Growth"
+  },
+  {
+    "id": "b33cf6d8-a8f9-41c1-8d26-74c5d5f4d8b8",
+    "ticker": "MU",
+    "old_status": "ahead",
+    "new_status": "at_risk",
+    "reasoning": "While AI memory demand remains high, recent headlines from The Wall Street Journal explicitly warn that the 'AI chip mania' is sowing the seeds of its own destruction, signaling potential cyclical risks. This shift in market sentiment toward potential oversupply or cyclical downturns moves the status closer to the threshold break condition regarding industry-wide shortage easing.",
+    "confidence": 7,
+    "created_at": "2026-05-17T05:00:15.934122+00:00",
+    "read": true,
+    "reason_name": "AI Demand Growth"
   }
 ]

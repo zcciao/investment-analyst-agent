@@ -24,6 +24,7 @@ import asyncio
 import json
 import logging
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import AsyncIterator
 
@@ -41,9 +42,10 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from agent.thesis_builder import get_thesis_build_graph
-from agent.thesis_store import Thesis, list_theses, upsert_thesis
-from agent.thesis_validator import get_validate_graph, initial_state_for
+from agent.plan_builder import get_plan_build_graph
+from agent.plan_reviewer import get_review_graph, initial_state_for
+from agent.plan_store import Plan, get_plan, list_plans, upsert_plan
+from agent.tools import get_price_history, get_recent_news, get_stock_quote
 from pydantic import ValidationError as PydanticValidationError
 from watcher.alerts import list_alerts, mark_read, unread_count
 from watcher.engine import run_watcher, run_watcher_for_ticker
@@ -87,14 +89,14 @@ class ChatRequest(BaseModel):
     message: str
 
 
-class ThesisBuildRequest(BaseModel):
+class PlanBuildRequest(BaseModel):
     ticker: str
     purchase_price: float
     current_note: str
 
 
-class ThesisSaveRequest(BaseModel):
-    thesis: dict
+class PlanSaveRequest(BaseModel):
+    plan: dict
 
 
 # --------------------------------------------------------------------------- #
@@ -128,47 +130,42 @@ async def chat(req: ChatRequest):
     return EventSourceResponse(_stream_turn(req), sep="\n")
 
 
-@app.post("/thesis/build")
-async def thesis_build(req: ThesisBuildRequest):
-    return EventSourceResponse(_stream_thesis_build(req), sep="\n")
+@app.post("/plan/build")
+async def plan_build(req: PlanBuildRequest):
+    return EventSourceResponse(_stream_plan_build(req), sep="\n")
 
 
-@app.post("/thesis/{ticker}/validate")
-async def thesis_validate(ticker: str):
-    """Stream a back-check / validation report for an existing thesis."""
-    return EventSourceResponse(_stream_thesis_validate(ticker), sep="\n")
+@app.post("/plan/{ticker}/review")
+async def plan_review(ticker: str):
+    """Stream a back-check / review report for an existing plan."""
+    return EventSourceResponse(_stream_plan_review(ticker), sep="\n")
 
 
-@app.post("/thesis/save")
-async def thesis_save(req: ThesisSaveRequest) -> dict:
+@app.post("/plan/save")
+async def plan_save(req: PlanSaveRequest) -> dict:
     try:
-        t = Thesis(**req.thesis)
+        p = Plan(**req.plan)
     except PydanticValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    upsert_thesis(t)
-    log.info("[thesis saved] %s", t.ticker)
-    return {"ok": True, "ticker": t.ticker}
+    upsert_plan(p)
+    log.info("[plan saved] %s", p.ticker)
+    return {"ok": True, "ticker": p.ticker}
 
 
-@app.get("/thesis/{ticker}/detail")
-async def thesis_detail(ticker: str, period: str = "1y", news_limit: int = 15) -> dict:
-    """Lightweight read for the per-thesis detail screen: price history + news.
+@app.get("/plan/{ticker}")
+async def plan_detail(ticker: str, period: str = "1y", news_limit: int = 15) -> dict:
+    """Lightweight read for the per-plan detail screen: price history + news.
 
-    Picks a sensible default period based on the thesis's entry_date if unset.
+    Picks a sensible default period based on the plan's entry_date if unset.
     """
-    from agent.thesis_store import get_thesis
-    from agent.tools import get_price_history, get_recent_news
-    from datetime import datetime, timezone
-
     ticker = ticker.upper()
-    t = get_thesis(ticker)
-    if t is None:
-        raise HTTPException(status_code=404, detail=f"No thesis for {ticker}")
+    p = get_plan(ticker)
+    if p is None:
+        raise HTTPException(status_code=404, detail=f"No plan for {ticker}")
 
-    # Pick a period that covers the holding window if not explicitly given.
-    if period == "1y" and t.entry_date:
+    if period == "1y" and p.entry_date:
         try:
-            entry = datetime.fromisoformat(t.entry_date.replace("Z", "+00:00")).date()
+            entry = datetime.fromisoformat(p.entry_date.replace("Z", "+00:00")).date()
             days = (datetime.now(timezone.utc).date() - entry).days
             period = (
                 "3mo" if days <= 30
@@ -187,21 +184,20 @@ async def thesis_detail(ticker: str, period: str = "1y", news_limit: int = 15) -
     return {"ticker": ticker, "history": history, "news": news}
 
 
-@app.get("/thesis/dashboard")
-async def thesis_dashboard() -> list[dict]:
-    """Return all theses enriched with live quotes and P&L performance."""
-    from agent.tools import get_stock_quote
-    theses = list_theses()
-    if not theses:
+@app.get("/plans")
+async def plans_dashboard() -> list[dict]:
+    """Return all plans enriched with live quotes and P&L performance."""
+    plans = list_plans()
+    if not plans:
         return []
     quotes = await asyncio.gather(*[
-        asyncio.to_thread(get_stock_quote.func, ticker=t.ticker)
-        for t in theses
+        asyncio.to_thread(get_stock_quote.func, ticker=p.ticker)
+        for p in plans
     ])
     result = []
-    for t, q in zip(theses, quotes):
+    for p, q in zip(plans, quotes):
         current = q.get("last_price")
-        entry = t.entry_price
+        entry = p.entry_price
         perf = None
         if entry and current:
             gain_abs = round(current - entry, 2)
@@ -213,7 +209,7 @@ async def thesis_dashboard() -> list[dict]:
                 "gain_pct": gain_pct,
             }
         result.append({
-            "thesis": t.model_dump(),
+            "plan": p.model_dump(),
             "quote": q,
             "performance": perf,
         })
@@ -232,7 +228,7 @@ async def watcher_run() -> dict:
 
 @app.post("/watcher/run/{ticker}")
 async def watcher_run_one(ticker: str) -> dict:
-    """Trigger a watcher run for a single thesis."""
+    """Trigger a watcher run for a single plan."""
     return await run_watcher_for_ticker(ticker)
 
 
@@ -349,32 +345,40 @@ def _truncate(s, limit: int = 4000) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# Thesis builder streaming
+# Generic graph-streaming helper
 # --------------------------------------------------------------------------- #
 
-_THESIS_NODE_NAMES = {"draft_node", "research_node", "refine_node", "done_node"}
-_THESIS_NODE_STEP = {n: n.replace("_node", "") for n in _THESIS_NODE_NAMES}
+async def _stream_graph(
+    graph,
+    initial_state: dict,
+    *,
+    node_names: set[str],
+    summary_fn,
+    ready_event: tuple[str, str] | None = None,
+    ready_payload_fn=None,
+) -> AsyncIterator[dict]:
+    """Stream a LangGraph as SSE events.
 
+    Emits ``step_start`` / ``step_done`` for every node in ``node_names``.
+    On ``error`` in any node's output, emits ``error`` + ``done`` and stops.
+    On the final ``done`` step, optionally emits a custom *ready* event:
 
-async def _stream_thesis_build(req: ThesisBuildRequest) -> AsyncIterator[dict]:
-    initial: dict = {
-        "ticker": req.ticker.upper(),
-        "purchase_price": req.purchase_price,
-        "current_note": req.current_note,
-        "draft": {}, "quote": {}, "company_info": {},
-        "financials": {}, "news": [], "web_snippets": [],
-        "thesis": {}, "error": None, "steps_completed": [],
-    }
-    graph = get_thesis_build_graph()
-    log.info("[thesis build] ticker=%s price=%s", initial["ticker"], req.purchase_price)
+        ready_event       = (event_name, output_key)
+                            e.g. ("plan_ready", "plan")
+        ready_payload_fn  = (output, initial_state) -> payload dict
+                            defaults to {output_key: output[output_key]}
+
+    Step names are derived from node names by stripping the ``_node`` suffix
+    (so ``draft_node`` becomes step ``"draft"``).
+    """
+    step_of = {n: n.replace("_node", "") for n in node_names}
     try:
-        async for event in graph.astream_events(initial, version="v2"):
-            ev_kind = event["event"]
+        async for event in graph.astream_events(initial_state, version="v2"):
             ev_name = event.get("name", "")
-            if ev_name not in _THESIS_NODE_NAMES:
+            if ev_name not in node_names:
                 continue
-
-            step = _THESIS_NODE_STEP[ev_name]
+            step = step_of[ev_name]
+            ev_kind = event["event"]
 
             if ev_kind == "on_chain_start":
                 yield _sse("step_start", {"step": step})
@@ -386,43 +390,79 @@ async def _stream_thesis_build(req: ThesisBuildRequest) -> AsyncIterator[dict]:
                     yield _sse("done", {})
                     return
 
-                yield _sse("step_done", {"step": step, "data": _wizard_summary(output, step)})
+                yield _sse("step_done", {"step": step, "data": summary_fn(output, step)})
 
-                if step == "done" and output.get("thesis"):
-                    yield _sse("thesis_ready", {"thesis": output["thesis"]})
+                if (
+                    ready_event
+                    and step == "done"
+                    and output.get(ready_event[1])
+                ):
+                    name, key = ready_event
+                    payload = (
+                        ready_payload_fn(output, initial_state)
+                        if ready_payload_fn
+                        else {key: output[key]}
+                    )
+                    yield _sse(name, payload)
 
         yield _sse("done", {})
 
     except Exception as e:
-        log.exception("thesis build stream failed")
+        log.exception("graph stream failed")
         yield _sse("error", {"message": str(e)})
         yield _sse("done", {})
 
 
+# --------------------------------------------------------------------------- #
+# Plan builder streaming
+# --------------------------------------------------------------------------- #
+
+_PLAN_NODE_NAMES = {"draft_node", "research_node", "refine_node", "done_node"}
+
+
 def _wizard_summary(output: dict, step: str) -> dict:
-    """Return a small UI-friendly payload for each step — avoid large blobs."""
+    """Per-step payload for the build wizard's progress strip."""
     if step == "draft":
-        return {"pillar_count": len(output.get("draft", {}).get("pillars", []))}
+        return {"reason_count": len(output.get("draft", {}).get("reasons", []))}
     if step == "research":
         price = output.get("quote", {}).get("last_price")
         return {"price": price, "has_web": bool(output.get("web_snippets"))}
     if step == "refine":
-        pillars = output.get("thesis", {}).get("pillars", [])
-        filled = sum(1 for p in pillars if p.get("current_value"))
-        return {"pillars_filled": filled, "total": len(pillars)}
+        reasons = output.get("plan", {}).get("reasons", [])
+        filled = sum(1 for r in reasons if r.get("current_value"))
+        return {"reasons_filled": filled, "total": len(reasons)}
     return {}
 
 
+async def _stream_plan_build(req: PlanBuildRequest) -> AsyncIterator[dict]:
+    initial: dict = {
+        "ticker": req.ticker.upper(),
+        "purchase_price": req.purchase_price,
+        "current_note": req.current_note,
+        "draft": {}, "quote": {}, "company_info": {},
+        "financials": {}, "news": [], "web_snippets": [],
+        "plan": {}, "error": None, "steps_completed": [],
+    }
+    log.info("[plan build] ticker=%s price=%s", initial["ticker"], req.purchase_price)
+    async for ev in _stream_graph(
+        get_plan_build_graph(),
+        initial,
+        node_names=_PLAN_NODE_NAMES,
+        summary_fn=_wizard_summary,
+        ready_event=("plan_ready", "plan"),
+    ):
+        yield ev
+
+
 # --------------------------------------------------------------------------- #
-# Thesis validator streaming
+# Plan reviewer streaming
 # --------------------------------------------------------------------------- #
 
-_VALIDATE_NODE_NAMES = {"gather_node", "analyze_node", "done_node"}
-_VALIDATE_NODE_STEP = {n: n.replace("_node", "") for n in _VALIDATE_NODE_NAMES}
+_REVIEW_NODE_NAMES = {"gather_node", "analyze_node", "done_node"}
 
 
-def _validate_summary(output: dict, step: str) -> dict:
-    """Compact per-step payload for the UI progress strip."""
+def _review_summary(output: dict, step: str) -> dict:
+    """Per-step payload for the review report's progress strip."""
     if step == "gather":
         hist = output.get("history") or {}
         return {
@@ -431,60 +471,35 @@ def _validate_summary(output: dict, step: str) -> dict:
             "alerts": len(output.get("alerts") or []),
         }
     if step == "analyze":
-        v = output.get("validation") or {}
+        v = output.get("review") or {}
         return {
             "recommendation": v.get("recommendation"),
-            "pillar_reviews": len(v.get("pillar_reviews") or []),
+            "reason_reviews": len(v.get("reason_reviews") or []),
         }
     return {}
 
 
-async def _stream_thesis_validate(ticker: str) -> AsyncIterator[dict]:
+async def _stream_plan_review(ticker: str) -> AsyncIterator[dict]:
     state = initial_state_for(ticker)
     if state is None:
-        yield _sse("error", {"message": f"No thesis on file for {ticker.upper()}."})
+        yield _sse("error", {"message": f"No plan on file for {ticker.upper()}."})
         yield _sse("done", {})
         return
 
-    graph = get_validate_graph()
-    log.info("[thesis validate] ticker=%s", ticker.upper())
-    try:
-        async for event in graph.astream_events(state, version="v2"):
-            ev_kind = event["event"]
-            ev_name = event.get("name", "")
-            if ev_name not in _VALIDATE_NODE_NAMES:
-                continue
-
-            step = _VALIDATE_NODE_STEP[ev_name]
-
-            if ev_kind == "on_chain_start":
-                yield _sse("step_start", {"step": step})
-
-            elif ev_kind == "on_chain_end":
-                output = event.get("data", {}).get("output", {}) or {}
-                if output.get("error"):
-                    yield _sse("error", {"message": output["error"]})
-                    yield _sse("done", {})
-                    return
-
-                yield _sse("step_done", {"step": step, "data": _validate_summary(output, step)})
-
-                if step == "done" and output.get("validation"):
-                    yield _sse(
-                        "validation_ready",
-                        {
-                            "ticker": state["ticker"],
-                            "thesis": state["thesis"],
-                            "validation": output["validation"],
-                        },
-                    )
-
-        yield _sse("done", {})
-
-    except Exception as e:
-        log.exception("thesis validate stream failed")
-        yield _sse("error", {"message": str(e)})
-        yield _sse("done", {})
+    log.info("[plan review] ticker=%s", ticker.upper())
+    async for ev in _stream_graph(
+        get_review_graph(),
+        state,
+        node_names=_REVIEW_NODE_NAMES,
+        summary_fn=_review_summary,
+        ready_event=("review_ready", "review"),
+        ready_payload_fn=lambda out, st: {
+            "ticker": st["ticker"],
+            "plan": st["plan"],
+            "review": out["review"],
+        },
+    ):
+        yield ev
 
 
 # --------------------------------------------------------------------------- #

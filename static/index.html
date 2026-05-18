@@ -19,7 +19,7 @@
     --emerald-50: #ecfdf5; --emerald-600: #059669; --emerald-700: #047857;
     --violet-50: #f5f3ff; --violet-200: #ddd6fe; --violet-700: #6d28d9;
     --teal-50: #f0fdfa; --teal-200: #99f6e4; --teal-700: #0f766e;
-    --intact: #10b981; --wobble: #f59e0b; --broken: #ef4444; --strengthening: #14b8a6;
+    --on-track: #10b981; --at-risk: #f59e0b; --off-track: #ef4444; --ahead: #14b8a6;
     --shadow: 0 2px 8px rgba(15,23,42,.04), 0 1px 2px rgba(15,23,42,.06);
   }
   * { box-sizing: border-box; }
@@ -61,12 +61,12 @@
 
   .pill { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px;
     letter-spacing: .04em; text-transform: uppercase; }
-  .pill.break  { background: var(--rose-50);   color: var(--rose-700);   border: 1px solid var(--rose-200); }
-  .pill.wobble { background: var(--amber-50);  color: var(--amber-700);  border: 1px solid var(--amber-200); }
+  .pill.off_track  { background: var(--rose-50);   color: var(--rose-700);   border: 1px solid var(--rose-200); }
+  .pill.at_risk { background: var(--amber-50);  color: var(--amber-700);  border: 1px solid var(--amber-200); }
   .pill.fyi    { background: var(--sky-50);    color: var(--sky-700);    border: 1px solid var(--sky-200); }
-  .pill.catalyst { background: var(--violet-50); color: var(--violet-700); border: 1px solid var(--violet-200); }
-  .pill.intact { background: var(--emerald-50); color: var(--emerald-700); border: 1px solid #a7f3d0; }
-  .pill.strengthening { background: var(--teal-50); color: var(--teal-700); border: 1px solid var(--teal-200); }
+  .pill.event { background: var(--violet-50); color: var(--violet-700); border: 1px solid var(--violet-200); }
+  .pill.on_track { background: var(--emerald-50); color: var(--emerald-700); border: 1px solid #a7f3d0; }
+  .pill.ahead { background: var(--teal-50); color: var(--teal-700); border: 1px solid var(--teal-200); }
 
   /* Price chart */
   .price-chart-card { background: var(--card); border: 1px solid var(--hair);
@@ -112,18 +112,18 @@
   }
   .tl-dot.journal   { background: var(--ink-3); }
   .tl-dot.news      { background: var(--sky-700); }
-  .tl-dot.catalyst  { background: var(--violet-700); }
-  .tl-dot.alert-broken        { background: var(--broken); }
-  .tl-dot.alert-wobbling      { background: var(--wobble); }
-  .tl-dot.alert-strengthening { background: var(--strengthening); }
-  .tl-dot.alert-intact        { background: var(--intact); }
+  .tl-dot.event  { background: var(--violet-700); }
+  .tl-dot.alert-off_track        { background: var(--off-track); }
+  .tl-dot.alert-at_risk      { background: var(--at-risk); }
+  .tl-dot.alert-ahead { background: var(--ahead); }
+  .tl-dot.alert-on_track        { background: var(--on-track); }
   .tl-item.future .tl-dot { animation: pulse 2.5s infinite; }
   .tl-meta { display: flex; gap: 8px; font-size: 9px; font-weight: 700;
     color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em;
     margin-bottom: 3px; align-items: center; }
   .tl-meta .tl-type.alert        { color: var(--amber-700); }
   .tl-meta .tl-type.news         { color: var(--sky-700); }
-  .tl-meta .tl-type.catalyst     { color: var(--violet-700); }
+  .tl-meta .tl-type.event     { color: var(--violet-700); }
   .tl-meta .tl-type.journal      { color: var(--ink-2); }
   .tl-title { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.35; }
   .tl-title a { color: var(--ink); text-decoration: none; }
@@ -133,11 +133,11 @@
   /* Validation verdict pills */
   .verdict { font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 6px;
     letter-spacing: .04em; text-transform: uppercase; display: inline-block; }
-  .verdict.held       { background: var(--emerald-50); color: var(--emerald-700); }
-  .verdict.missed     { background: var(--rose-50);    color: var(--rose-700); }
-  .verdict.too-loose  { background: var(--amber-50);   color: var(--amber-700); }
-  .verdict.too-tight  { background: var(--sky-50);     color: var(--sky-700); }
-  .verdict.untested   { background: #f3f4f6;           color: var(--ink-3); }
+  .verdict.held_up         { background: var(--emerald-50); color: var(--emerald-700); }
+  .verdict.failed          { background: var(--rose-50);    color: var(--rose-700); }
+  .verdict.set_too_low     { background: var(--amber-50);   color: var(--amber-700); }
+  .verdict.set_too_high    { background: var(--sky-50);     color: var(--sky-700); }
+  .verdict.not_enough_data { background: #f3f4f6;           color: var(--ink-3); }
 
   /* Recommendation pill (large, bordered) */
   .rec-pill { display: inline-flex; align-items: center; gap: 6px;
@@ -178,7 +178,7 @@
   /* ── Watcher bar ── */
   .watcher { margin: 10px 4px 6px; display: flex; align-items: center; gap: 8px;
     font-size: 12px; color: var(--ink-3); font-weight: 500; }
-  .pulse-dot { width: 7px; height: 7px; background: var(--intact); border-radius: 50%;
+  .pulse-dot { width: 7px; height: 7px; background: var(--on-track); border-radius: 50%;
     animation: pulse 2.5s infinite; flex-shrink: 0; }
   @keyframes pulse {
     0%   { box-shadow: 0 0 0 0   rgba(16,185,129,.5); }
@@ -191,10 +191,10 @@
   /* ── Alert / briefing card ── */
   .card { background: var(--card); border: 1px solid var(--hair); border-radius: 18px;
     padding: 16px 16px 14px; margin-bottom: 12px; box-shadow: var(--shadow); }
-  .card.severity-break        { border-left: 3px solid var(--rose-700); }
-  .card.severity-wobble       { border-left: 3px solid var(--amber-700); }
-  .card.severity-catalyst     { border-left: 3px solid var(--violet-700); }
-  .card.severity-strengthening { border-left: 3px solid var(--strengthening); }
+  .card.severity-off_track        { border-left: 3px solid var(--rose-700); }
+  .card.severity-at_risk       { border-left: 3px solid var(--amber-700); }
+  .card.severity-event     { border-left: 3px solid var(--violet-700); }
+  .card.severity-ahead { border-left: 3px solid var(--ahead); }
   .card .row1 { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .card .ticker { font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
   .card .ticker .price { color: var(--ink-3); font-weight: 500; margin-left: 6px; font-size: 13px; }
@@ -202,23 +202,16 @@
   .headline { font-size: 16px; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; margin: 2px 0 8px; }
   .body-text { font-size: 14px; color: var(--ink-2); line-height: 1.5; margin-bottom: 12px; }
   .body-text b { color: var(--ink); font-weight: 600; }
-  .pillar-line { display: flex; align-items: center; gap: 8px; font-size: 13px;
+  .reason-line { display: flex; align-items: center; gap: 8px; font-size: 13px;
     color: var(--ink-2); padding: 6px 0; }
   .pdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .pdot.intact   { background: var(--intact); }
-  .pdot.wobbling, .pdot.wobble { background: var(--wobble); }
-  .pdot.broken   { background: var(--broken); }
-  .pdot.strengthening { background: var(--strengthening); }
-  .pillar-line .arrow { color: var(--ink-3); margin: 0 2px; font-size: 11px; }
-  .pillar-line .new-status { color: var(--rose-700); font-weight: 600; }
+  .pdot.on_track   { background: var(--on-track); }
+  .pdot.at_risk { background: var(--at-risk); }
+  .pdot.off_track   { background: var(--off-track); }
+  .pdot.ahead { background: var(--ahead); }
+  .reason-line .arrow { color: var(--ink-3); margin: 0 2px; font-size: 11px; }
+  .reason-line .new-status { color: var(--rose-700); font-weight: 600; }
   .actions { display: flex; gap: 8px; margin-top: 8px; }
-
-  /* ── FYI row ── */
-  .fyi-row { display: flex; align-items: center; gap: 10px; background: var(--card);
-    border: 1px solid var(--hair); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
-  .fyi-row .fticker { font-size: 14px; font-weight: 700; min-width: 52px; }
-  .fyi-row .ftext { font-size: 13px; color: var(--ink-2); line-height: 1.35; flex: 1; }
-  .fyi-row .ftime { font-size: 11px; color: var(--ink-3); }
 
   /* ── KPI strip ── */
   .kpi-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin: 8px 0 12px; }
@@ -227,7 +220,7 @@
   .kpi .klabel { font-size: 9px; color: var(--ink-3); letter-spacing: .08em;
     text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
   .kpi .kvalue { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
-  .kpi .kvalue.red   { color: var(--broken); }
+  .kpi .kvalue.red   { color: var(--off-track); }
   .kpi .kvalue.amber { color: var(--amber-700); }
   .kpi .kvalue.green { color: var(--emerald-700); }
   .kpi .ksub { font-size: 10px; color: var(--ink-3); margin-top: 2px; }
@@ -240,7 +233,7 @@
   .ts-item { flex-shrink: 0; font-size: 12px; display: flex; align-items: baseline; gap: 4px; }
   .ts-item b { font-weight: 700; }
   .ts-item .up { color: var(--emerald-600); font-weight: 600; font-size: 11px; }
-  .ts-item .dn { color: var(--broken);      font-weight: 600; font-size: 11px; }
+  .ts-item .dn { color: var(--off-track);      font-weight: 600; font-size: 11px; }
 
   /* ── Filters ── */
   .filters { display: flex; gap: 6px; margin: 4px 0 14px; overflow-x: auto; }
@@ -251,49 +244,49 @@
   .filter.active { background: var(--ink); color: white; border-color: var(--ink); }
 
   /* ── Thesis card ── */
-  .thesis-card { background: var(--card); border: 1px solid var(--hair); border-radius: 16px;
+  .plan-card { background: var(--card); border: 1px solid var(--hair); border-radius: 16px;
     padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow); cursor: pointer; }
-  .thesis-card.has-break  { border-left: 3px solid var(--broken); }
-  .thesis-card.has-wobble { border-left: 3px solid var(--wobble); }
-  .thesis-card.has-strong { border-left: 3px solid var(--strengthening); }
-  .thesis-card .tc-row1 { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
-  .thesis-card .tkr  { font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
-  .thesis-card .tname { font-size: 12px; color: var(--ink-3); font-weight: 500;
+  .plan-card.has-off_track  { border-left: 3px solid var(--off-track); }
+  .plan-card.has-at_risk { border-left: 3px solid var(--at-risk); }
+  .plan-card.has-ahead { border-left: 3px solid var(--ahead); }
+  .plan-card .tc-row1 { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .plan-card .tkr  { font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+  .plan-card .tname { font-size: 12px; color: var(--ink-3); font-weight: 500;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
-  .thesis-card .tprice { margin-left: auto; font-size: 14px; font-weight: 700; white-space: nowrap; }
-  .thesis-card .tchg { font-size: 12px; font-weight: 600; margin-left: 4px; }
-  .thesis-card .tchg.up { color: var(--emerald-600); }
-  .thesis-card .tchg.dn { color: var(--broken); }
-  .thesis-card .tc-row2 { display: flex; align-items: center; gap: 8px;
+  .plan-card .tprice { margin-left: auto; font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .plan-card .tchg { font-size: 12px; font-weight: 600; margin-left: 4px; }
+  .plan-card .tchg.up { color: var(--emerald-600); }
+  .plan-card .tchg.dn { color: var(--off-track); }
+  .plan-card .tc-row2 { display: flex; align-items: center; gap: 8px;
     font-size: 11px; color: var(--ink-2); margin-bottom: 10px; flex-wrap: wrap; }
   .conv-bar { display: inline-block; width: 52px; height: 4px; background: var(--hair);
     border-radius: 2px; overflow: hidden; vertical-align: middle; }
   .conv-bar i { display: block; height: 100%;
-    background: linear-gradient(90deg, #60a5fa, var(--intact)); }
+    background: linear-gradient(90deg, #60a5fa, var(--on-track)); }
   .tc-row2 .sep { color: var(--ink-4); }
   .sev-tag { font-weight: 700; }
-  .sev-tag.break  { color: var(--broken); }
-  .sev-tag.wobble { color: var(--amber-700); }
-  .sev-tag.intact { color: var(--emerald-700); }
-  .sev-tag.strong { color: var(--teal-700); }
+  .sev-tag.off_track  { color: var(--off-track); }
+  .sev-tag.at_risk { color: var(--amber-700); }
+  .sev-tag.on_track { color: var(--emerald-700); }
+  .sev-tag.ahead { color: var(--teal-700); }
 
-  .pillars-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 4px 10px; margin-bottom: 4px; }
+  .reasons-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 4px 10px; margin-bottom: 4px; }
   .tc-watcher { display: flex; align-items: center; gap: 6px; font-size: 11px;
     color: var(--ink-3); margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--hair); }
   .tc-watcher .pulse-dot { width: 5px; height: 5px; }
   .tc-watcher b { color: var(--ink); font-weight: 700; }
   .tc-watcher .new-tag { color: var(--rose-700); font-weight: 700; }
-  .tkr-badge { background: var(--broken); color: white; font-size: 9px; font-weight: 700;
+  .tkr-badge { background: var(--off-track); color: white; font-size: 9px; font-weight: 700;
     padding: 1px 5px; border-radius: 8px; margin-left: 4px; vertical-align: 3px;
     min-width: 14px; display: inline-block; text-align: center; }
   .p-row { display: flex; align-items: center; gap: 6px; font-size: 12px;
     color: var(--ink-2); padding: 3px 0; }
   .p-row .led { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .p-row.intact .led   { background: var(--intact); }
-  .p-row.wobbling .led { background: var(--wobble); }
-  .p-row.broken .led   { background: var(--broken);
+  .p-row.on_track .led   { background: var(--on-track); }
+  .p-row.at_risk .led { background: var(--at-risk); }
+  .p-row.off_track .led   { background: var(--off-track);
     animation: pulseBroken 1.6s ease-in-out infinite; }
-  .p-row.strengthening .led { background: var(--strengthening); }
+  .p-row.ahead .led { background: var(--ahead); }
   @keyframes pulseBroken {
     0%,100% { box-shadow: 0 0 0 0   rgba(239,68,68,.4); }
     50%     { box-shadow: 0 0 0 5px rgba(239,68,68, 0); }
@@ -308,30 +301,30 @@
   .detail-header .dname { font-size: 13px; color: var(--ink-3); font-weight: 500; }
   .detail-header .dprice-row { display: flex; align-items: baseline; gap: 10px; margin-top: 2px; }
   .detail-header .dpx  { font-size: 22px; font-weight: 700; }
-  .detail-header .dchg.dn { color: var(--broken);      font-weight: 600; }
+  .detail-header .dchg.dn { color: var(--off-track);      font-weight: 600; }
   .detail-header .dchg.up { color: var(--emerald-600); font-weight: 600; }
   .meta-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 
-  .pillar-detail { background: var(--card); border: 1px solid var(--hair); border-radius: 14px;
+  .reason-detail { background: var(--card); border: 1px solid var(--hair); border-radius: 14px;
     padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow); }
-  .pillar-detail.broken        { border-left: 3px solid var(--broken); }
-  .pillar-detail.wobbling      { border-left: 3px solid var(--wobble); }
-  .pillar-detail.intact        { border-left: 3px solid var(--intact); }
-  .pillar-detail.strengthening { border-left: 3px solid var(--strengthening); }
-  .pillar-detail .pdhead  { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .pillar-detail .pdname  { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
-  .pillar-detail .spill   { margin-left: auto; font-size: 10px; font-weight: 700;
+  .reason-detail.off_track        { border-left: 3px solid var(--off-track); }
+  .reason-detail.at_risk      { border-left: 3px solid var(--at-risk); }
+  .reason-detail.on_track        { border-left: 3px solid var(--on-track); }
+  .reason-detail.ahead { border-left: 3px solid var(--ahead); }
+  .reason-detail .pdhead  { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .reason-detail .pdname  { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+  .reason-detail .spill   { margin-left: auto; font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: .06em; padding: 3px 8px; border-radius: 6px; }
-  .pillar-detail.intact .spill        { background: var(--emerald-50); color: var(--emerald-700); }
-  .pillar-detail.wobbling .spill      { background: var(--amber-50);   color: var(--amber-700); }
-  .pillar-detail.broken .spill        { background: var(--rose-50);    color: var(--rose-700); }
-  .pillar-detail.strengthening .spill { background: var(--teal-50);    color: var(--teal-700); }
-  .pillar-detail .kv { display: grid; grid-template-columns: 100px 1fr;
+  .reason-detail.on_track .spill        { background: var(--emerald-50); color: var(--emerald-700); }
+  .reason-detail.at_risk .spill      { background: var(--amber-50);   color: var(--amber-700); }
+  .reason-detail.off_track .spill        { background: var(--rose-50);    color: var(--rose-700); }
+  .reason-detail.ahead .spill { background: var(--teal-50);    color: var(--teal-700); }
+  .reason-detail .kv { display: grid; grid-template-columns: 100px 1fr;
     gap: 4px 10px; font-size: 12px; margin-top: 6px; }
-  .pillar-detail .kv .k { color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em;
+  .reason-detail .kv .k { color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em;
     font-size: 10px; font-weight: 700; align-self: start; padding-top: 1px; }
-  .pillar-detail .kv .v { color: var(--ink); }
-  .pillar-detail .kv .v.broken { color: var(--broken); font-weight: 600; }
+  .reason-detail .kv .v { color: var(--ink); }
+  .reason-detail .kv .v.off_track { color: var(--off-track); font-weight: 600; }
   .signals { display: flex; flex-wrap: wrap; gap: 4px; }
 
   /* ── Ask / chat ── */
@@ -384,7 +377,7 @@
   .tab .icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
     stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .tab.active .icon svg { stroke-width: 2.2; }
-  .badge { position: absolute; top: -2px; right: -8px; background: var(--broken); color: white;
+  .badge { position: absolute; top: -2px; right: -8px; background: var(--off-track); color: white;
     font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 8px;
     min-width: 14px; text-align: center; }
 
@@ -419,7 +412,7 @@
     border-top-color: var(--ink); border-radius: 50%;
     animation: spin .8s linear infinite; display: inline-block; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .pillar-card { background: #f9fafb; border: 1px solid var(--hair);
+  .wiz-reason-card { background: #f9fafb; border: 1px solid var(--hair);
     border-radius: 10px; padding: 14px; margin-bottom: 10px; }
   .wiz-section-label { font-size: 14px; color: var(--ink); font-weight: 600;
     margin: 16px 0 8px; border-bottom: 1px solid var(--hair); padding-bottom: 6px; }
@@ -439,7 +432,7 @@
 <div class="wizard-overlay" id="wizard-overlay">
   <div class="wizard-inner">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2 style="margin:0;font-size:20px;font-weight:700;" id="wizard-title">Build Thesis</h2>
+      <h2 style="margin:0;font-size:20px;font-weight:700;" id="wizard-title">Add a Plan</h2>
       <button id="wizard-close" style="background:none;border:1px solid var(--hair);color:var(--ink-2);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:inherit;">Close</button>
     </div>
     <div id="wizard-body"></div>
@@ -482,8 +475,8 @@
       </div>
 
       <div id="brief-attention"></div>
-      <div id="brief-strengthening"></div>
-      <div id="brief-catalysts"></div>
+      <div id="brief-ahead"></div>
+      <div id="brief-events"></div>
       <div id="brief-fyi"></div>
     </div>
 
@@ -491,7 +484,7 @@
     <div class="screen" id="screen-theses">
       <header class="page">
         <div class="date">Portfolio</div>
-        <h1>Theses</h1>
+        <h1>Plans</h1>
         <div class="sub" id="theses-sub">Loading…</div>
       </header>
 
@@ -499,7 +492,7 @@
         <div class="kpi">
           <div class="klabel">Health</div>
           <div class="kvalue amber" id="kpi-health">—</div>
-          <div class="ksub">pillars intact</div>
+          <div class="ksub">reasons on track</div>
         </div>
         <div class="kpi">
           <div class="klabel">Alerts</div>
@@ -509,10 +502,10 @@
         <div class="kpi">
           <div class="klabel">Avg Conv</div>
           <div class="kvalue" id="kpi-conv">—</div>
-          <div class="ksub">conviction</div>
+          <div class="ksub">confidence</div>
         </div>
         <div class="kpi">
-          <div class="klabel">Catalysts</div>
+          <div class="klabel">Events</div>
           <div class="kvalue green" id="kpi-cats">—</div>
           <div class="ksub">upcoming</div>
         </div>
@@ -523,12 +516,12 @@
       <div class="filters" id="theses-filters">
         <button class="filter active" data-filter="all">All</button>
         <button class="filter" data-filter="alerts">Alerts</button>
-        <button class="filter" data-filter="wobble">Wobble</button>
-        <button class="filter" data-filter="catalysts">Catalysts</button>
+        <button class="filter" data-filter="at_risk">At risk</button>
+        <button class="filter" data-filter="events">Events</button>
       </div>
 
       <div class="section-label">
-        <span class="title">Active theses</span>
+        <span class="title">Active plans</span>
         <span class="meta">sort: <b>severity</b> ↓</span>
       </div>
       <div id="theses-list"></div>
@@ -546,16 +539,16 @@
           <div class="ask-empty" id="ask-empty">
             <div class="avatar">A</div>
             <h2>Ask the Analyst</h2>
-            <p>Get the bear case, preview a catalyst, or dig into any pillar with citations.</p>
+            <p>Get the bear case, preview an upcoming event, or dig into any reason with citations.</p>
             <div class="ask-suggestions">
               <button class="ask-sug" data-q="What positions am I tracking?">What positions am I tracking?</button>
-              <button class="ask-sug" data-q="What's the bear case on my wobbling positions?">Bear case on my wobbling positions</button>
+              <button class="ask-sug" data-q="What's the bear case on my at-risk positions?">Bear case on my at-risk positions</button>
               <button class="ask-sug" data-q="Give me a fundamentals snapshot of my portfolio">Fundamentals snapshot of my portfolio</button>
             </div>
           </div>
         </div>
         <div class="chat-bar">
-          <textarea id="chat-input" placeholder="Ask about a ticker or your theses…" rows="1"></textarea>
+          <textarea id="chat-input" placeholder="Ask about a ticker or your plans…" rows="1"></textarea>
           <button class="send-btn" id="chat-send">↑</button>
         </div>
       </div>
@@ -569,9 +562,9 @@
       </header>
       <div style="padding: 0 4px;">
         <div class="you-section">
-          <h3>Theses</h3>
-          <div class="you-row" id="build-thesis-btn">
-            <div><div class="ylabel">+ Build new thesis</div><div class="ysub">Paste your notes, AI extracts pillars</div></div>
+          <h3>Plans</h3>
+          <div class="you-row" id="add-plan-btn">
+            <div><div class="ylabel">+ Add a plan</div><div class="ysub">Paste your notes, AI extracts your reasons</div></div>
             <span class="ychev">›</span>
           </div>
         </div>
@@ -589,7 +582,7 @@
         <div class="you-section">
           <h3>Help</h3>
           <div class="you-row" id="open-info-btn">
-            <div><div class="ylabel">Glossary &amp; how it works</div><div class="ysub">What thesis, pillar, wobble mean</div></div>
+            <div><div class="ylabel">Glossary &amp; how it works</div><div class="ysub">What plan, reason, at-risk mean</div></div>
             <span class="ychev">›</span>
           </div>
         </div>
@@ -628,93 +621,93 @@
       <div class="section-label"><span class="title">The big idea</span></div>
       <div class="card">
         <div class="body-text">
-          This isn't a stock picker. It's a <b>thesis tracker</b>: you write down <i>why</i> you own a position, the app watches the world, and it only interrupts you when something would actually change your mind.
+          This isn't a stock picker. It's a <b>plan tracker</b>: you write down <i>why</i> you own a position, the app watches the world, and it only interrupts you when something would actually change your mind.
         </div>
       </div>
 
       <div class="section-label"><span class="title">Core concepts</span></div>
 
       <div class="card">
-        <div class="headline">Thesis</div>
+        <div class="headline">Plan</div>
         <div class="body-text">
-          Your structured reason for holding a position. It includes a <b>one-liner</b>, a <b>conviction score (1–10)</b>, a <b>time horizon</b>, the <b>pillars</b> that hold it up, and an <b>exit plan</b>. Build a new one from <b>You → + Build new thesis</b>.
+          Your structured reason for holding a position <i>(some apps call this a thesis)</i>. It includes a <b>one-liner</b>, a <b>confidence score (1–10)</b>, a <b>time horizon</b>, the <b>reasons</b> that hold it up, and a <b>when-to-exit</b> set. Build a new one from <b>You → + Add a plan</b>.
         </div>
       </div>
 
       <div class="card">
-        <div class="headline">Pillar</div>
+        <div class="headline">Reason</div>
         <div class="body-text">
-          A load-bearing claim that <i>has to be true</i> for your thesis to work. Each pillar has:
+          A load-bearing claim that <i>has to be true</i> for your plan to work <i>(some apps call this a pillar)</i>. Each reason has:
         </div>
-        <div class="pillar-line"><span class="pdot intact"></span><span><b>Current value</b> — e.g., "Cloud growth 31% YoY"</span></div>
-        <div class="pillar-line"><span class="pdot intact"></span><span><b>Threshold</b> — the level at which the pillar breaks (e.g., "&lt;25% for 2 quarters")</span></div>
-        <div class="pillar-line"><span class="pdot intact"></span><span><b>Watch signals</b> — data sources monitored for changes (10-Qs, earnings calls, etc.)</span></div>
+        <div class="reason-line"><span class="pdot on_track"></span><span><b>Current value</b> — e.g., "Cloud growth 31% YoY"</span></div>
+        <div class="reason-line"><span class="pdot on_track"></span><span><b>Walk-away signal</b> — the level at which the reason fails (e.g., "&lt;25% for 2 quarters")</span></div>
+        <div class="reason-line"><span class="pdot on_track"></span><span><b>Data sources</b> — what to monitor (10-Qs, earnings calls, indices, etc.)</span></div>
       </div>
 
       <div class="card">
-        <div class="headline">Conviction</div>
+        <div class="headline">Confidence</div>
         <div class="body-text">
-          Your confidence in the thesis on a <b>1–10 scale</b>. Higher = stronger belief. The app uses this to weight portfolio-level numbers and to flag when you're adding to a low-conviction position.
+          Your belief in the plan on a <b>1–10 scale</b> <i>(some apps call this conviction)</i>. Higher = stronger. The app uses this to weight portfolio-level numbers and to flag when you're adding to a low-confidence position.
         </div>
       </div>
 
       <div class="card">
-        <div class="headline">Catalyst</div>
+        <div class="headline">Upcoming event</div>
         <div class="body-text">
-          A known upcoming event that could move the thesis — earnings calls, product launches, regulatory decisions. They show up on <b>Briefing</b> as a heads-up before they happen.
+          A known future event that could move the plan <i>(some apps call this a catalyst)</i> — earnings calls, product launches, regulatory decisions. They show up on <b>Briefing</b> as a heads-up before they happen.
         </div>
       </div>
 
-      <div class="section-label"><span class="title">Pillar status</span></div>
+      <div class="section-label"><span class="title">Reason status</span></div>
 
-      <div class="pillar-detail intact">
+      <div class="reason-detail on_track">
         <div class="pdhead">
-          <span class="pdot intact"></span>
-          <span class="pdname">Intact</span>
-          <span class="spill">Intact</span>
+          <span class="pdot on_track"></span>
+          <span class="pdname">On track</span>
+          <span class="spill">On track</span>
         </div>
         <div class="body-text" style="margin: 6px 0 0;">
-          The pillar is holding above its threshold. No action needed — this is the resting state.
+          The reason is holding clear of its walk-away signal. No action needed — this is the resting state. <i>(Previously: "intact".)</i>
         </div>
       </div>
 
-      <div class="pillar-detail wobbling">
+      <div class="reason-detail at_risk">
         <div class="pdhead">
-          <span class="pdot wobbling"></span>
-          <span class="pdname">Wobbling</span>
-          <span class="spill">Wobbling</span>
+          <span class="pdot at_risk"></span>
+          <span class="pdname">At risk</span>
+          <span class="spill">At risk</span>
         </div>
         <div class="body-text" style="margin: 6px 0 0;">
-          The pillar is <b>slipping toward</b> its threshold but hasn't crossed it yet. One more weak data point could break it. Worth a closer look — but you don't have to act yet.
+          The reason is <b>slipping toward</b> its walk-away signal but hasn't crossed it yet. One more weak data point could break it. Worth a closer look — but you don't have to act yet. <i>(Previously: "wobbling".)</i>
         </div>
       </div>
 
-      <div class="pillar-detail broken">
+      <div class="reason-detail off_track">
         <div class="pdhead">
-          <span class="pdot broken"></span>
-          <span class="pdname">Broken</span>
-          <span class="spill">Broken</span>
+          <span class="pdot off_track"></span>
+          <span class="pdname">Off track</span>
+          <span class="spill">Off track</span>
         </div>
         <div class="body-text" style="margin: 6px 0 0;">
-          The pillar has crossed its threshold <b>in the wrong direction</b>. The reason you bought this no longer holds — time to revisit the thesis, revise the pillar, or trigger your exit plan.
+          The reason has crossed its walk-away signal <b>in the wrong direction</b>. The "why" behind this position no longer holds — time to revisit the plan, revise the reason, or trigger your exit. <i>(Previously: "broken".)</i>
         </div>
       </div>
 
-      <div class="pillar-detail strengthening">
+      <div class="reason-detail ahead">
         <div class="pdhead">
-          <span class="pdot strengthening"></span>
-          <span class="pdname">Strengthening</span>
-          <span class="spill">Strengthening</span>
+          <span class="pdot ahead"></span>
+          <span class="pdname">Ahead</span>
+          <span class="spill">Ahead</span>
         </div>
         <div class="body-text" style="margin: 6px 0 0;">
-          The metric is <b>materially better than expected</b> — far from the failure condition and meaningfully improved vs. the recorded value. Consider raising the threshold, raising your conviction, or adding to the position. Reserved for genuine upside surprises, not routine performance.
+          The metric is <b>materially better than expected</b> — well clear of the failure condition and meaningfully improved vs. the recorded value. Consider raising the walk-away signal, raising confidence, or adding to the position. Reserved for genuine upside surprises, not routine performance. <i>(Previously: "strengthening".)</i>
         </div>
       </div>
 
       <div class="section-label"><span class="title">Portfolio health</span></div>
       <div class="card">
         <div class="body-text">
-          The <b>Portfolio Health %</b> on the Briefing screen is the share of all your pillars that are <b>intact</b>. 100% = nothing broken. The ring turns amber below 80% and red below 50%.
+          The <b>Portfolio Health %</b> on the Briefing screen is the share of all your reasons that are <b>on track</b> or <b>ahead</b>. 100% = nothing off-track. The ring turns amber below 80% and red below 50%.
         </div>
       </div>
 
@@ -723,39 +716,46 @@
       <div class="card">
         <div class="headline">🔭 Watcher</div>
         <div class="body-text">
-          A background agent that continuously scans <b>markets, news, social, and fundamentals</b> for each pillar's watch signals. It surfaces candidates — it doesn't decide.
+          A background agent that continuously scans <b>markets, social, news, and fundamentals</b> for each reason's data sources. It surfaces candidates — it doesn't decide.
         </div>
       </div>
 
       <div class="card">
         <div class="headline">🔬 Analyst</div>
         <div class="body-text">
-          Triggered when the watcher finds something. It pulls the evidence, drafts a <b>proposed thesis update</b> — which pillars moved and why — and cites its sources. This is also who you talk to on the <b>Ask</b> tab.
+          The one you talk to on the <b>Ask</b> tab. Pulls live data, explains plan state, flags risk, and nudges you to revise when a reason goes off-track or ahead.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="headline">🩺 Reviewer</div>
+        <div class="body-text">
+          Triggered by you from the plan detail page (<b>🔍 Review this plan</b>). Pulls price history + fundamentals over the holding window, grades each reason (held up / failed / set too low / set too high / not enough data), and proposes concrete updates you can apply.
         </div>
       </div>
 
       <div class="card">
         <div class="headline">🛡️ Supervisor</div>
         <div class="body-text">
-          A quality gate. Before any change touches your theses, the supervisor checks: is the evidence cited? is the reasoning sound? is the pillar change warranted? <b>Approve</b> → committed. <b>Reject</b> → analyst tries again.
+          A quality gate. Before any agent-proposed change touches your plans, the supervisor checks: is the evidence cited? is the reasoning sound? is the change warranted? <b>Approve</b> → committed. <b>Reject</b> → analyst tries again.
         </div>
       </div>
 
-      <div class="section-label"><span class="title">Exit plan</span></div>
+      <div class="section-label"><span class="title">When to exit</span></div>
 
       <div class="card">
         <div class="headline">Take profit</div>
-        <div class="body-text">A target price or condition at which you'd realize gains. Set this when you build the thesis so you don't have to decide in the heat of the moment.</div>
+        <div class="body-text">A target price or condition at which you'd realize gains. Set this when you build the plan so you don't have to decide in the heat of the moment.</div>
       </div>
 
       <div class="card">
-        <div class="headline">Thesis break</div>
-        <div class="body-text">The condition that signals the thesis is <b>invalidated</b> — usually expressed as "if pillar X breaks, I exit." This is your "stop loss" tied to <i>logic</i>, not price.</div>
+        <div class="headline">Plan break</div>
+        <div class="body-text">The condition that signals the plan is <b>invalidated</b> — usually expressed as "if reason X fails, I exit." This is your "stop loss" tied to <i>logic</i>, not price.</div>
       </div>
 
       <div class="card">
         <div class="headline">Time stop</div>
-        <div class="body-text">A deadline at which you re-evaluate if the thesis hasn't played out. Prevents money sitting in a stalled position forever.</div>
+        <div class="body-text">A deadline at which you re-evaluate if the plan hasn't played out. Prevents money sitting in a stalled position forever.</div>
       </div>
 
       <div style="padding-bottom: 24px;"></div>
@@ -774,7 +774,7 @@
     </button>
     <button class="tab" data-screen="theses">
       <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="11" width="7" height="10" rx="1.5"/><rect x="3" y="15" width="7" height="6" rx="1.5"/></svg></div>
-      <div>Theses</div>
+      <div>Plans</div>
     </button>
     <button class="tab" data-screen="ask">
       <div class="icon"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-5.4A8 8 0 1 1 21 12z"/></svg></div>
@@ -789,6 +789,14 @@
 
 <script>
 // ═══════════════════ UTILS ═══════════════════
+const STATUS_LABEL = {
+  on_track: "On track",
+  at_risk:  "At risk",
+  off_track:"Off track",
+  ahead:    "Ahead",
+};
+const statusLabel = s => STATUS_LABEL[s] || s;
+
 function esc(s) {
   return String(s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
@@ -840,7 +848,7 @@ let _watcherRuns = [];
 async function loadPortfolio() {
   try {
     const [dashRes, alertsRes, statusRes, runsRes] = await Promise.all([
-      fetch("/thesis/dashboard"),
+      fetch("/plans"),
       fetch("/watcher/alerts"),
       fetch("/watcher/status"),
       fetch("/watcher/runs?limit=50"),
@@ -886,7 +894,7 @@ function renderWatcherBar() {
     ? `${r.new_alerts} update${r.new_alerts!==1?"s":""}`
     : "no changes";
   if (txt)  txt.textContent  = `Watcher · ran ${ago} · ${summary}`;
-  if (ysub) ysub.textContent = `Last ran ${ago} · ${r.checked} thesis${r.checked!==1?"es":""} · ${summary}`;
+  if (ysub) ysub.textContent = `Last ran ${ago} · ${r.checked} plan${r.checked!==1?"s":""} · ${summary}`;
 }
 
 async function loadWatcherRuns() {
@@ -928,8 +936,8 @@ function renderRunCard(r) {
         <span class="time">${relTime(r.ran_at)}</span>
       </div>
       <div class="body-text" style="margin-bottom:8px;">
-        <b>${r.checked}</b> thesis${r.checked!==1?"es":""} scanned · <b>${r.new_alerts}</b> update${r.new_alerts!==1?"s":""}
-        ${failCount?` · <span style="color:var(--broken)">${failCount} failed</span>`:""}
+        <b>${r.checked}</b> plan${r.checked!==1?"s":""} scanned · <b>${r.new_alerts}</b> update${r.new_alerts!==1?"s":""}
+        ${failCount?` · <span style="color:var(--off-track)">${failCount} failed</span>`:""}
       </div>
       ${perTicker?`<div class="signals" style="display:flex;flex-wrap:wrap;gap:4px;">${perTicker}</div>`:""}
     </div>`;
@@ -938,30 +946,30 @@ function renderRunCard(r) {
 // ═══════════════════ HEALTH ═══════════════════
 function computeHealth(items) {
   let total = 0, intact = 0, broken = 0, wobble = 0, strong = 0;
-  items.forEach(({thesis}) => {
-    (thesis.pillars||[]).forEach(p => {
+  items.forEach(({plan}) => {
+    (plan.reasons||[]).forEach(p => {
       total++;
-      if (p.status === "intact")             intact++;
-      else if (p.status === "broken")        broken++;
-      else if (p.status === "wobbling")      wobble++;
-      else if (p.status === "strengthening") strong++;
+      if (p.status === "on_track")             intact++;
+      else if (p.status === "off_track")        broken++;
+      else if (p.status === "at_risk")      wobble++;
+      else if (p.status === "ahead") strong++;
     });
   });
   // Healthy = intact + strengthening (both are "doing fine or better")
   const healthy = intact + strong;
   const pct = total > 0 ? Math.round(healthy / total * 100) : 100;
-  return {pct, total, intact, broken, wobble, strong, theses: items.length};
+  return {pct, total, intact, broken, wobble, strong, plans: items.length};
 }
 
 function setHealthRing(pct, broken, wobble, strong, theses) {
   const offset = (113.1 * (1 - pct / 100)).toFixed(1);
-  const color  = pct >= 80 ? "var(--intact)" : pct >= 50 ? "var(--wobble)" : "var(--broken)";
+  const color  = pct >= 80 ? "var(--on-track)" : pct >= 50 ? "var(--at-risk)" : "var(--off-track)";
   const arc = document.getElementById("health-arc");
   if (arc) { arc.setAttribute("stroke-dashoffset", offset); arc.setAttribute("stroke", color); }
   document.getElementById("health-pct").textContent  = pct + "%";
   const parts = [`<b>${theses}</b> theses`];
-  if (broken)  parts.push(`<b style="color:var(--broken)">${broken}</b> broken`);
-  if (wobble)  parts.push(`<b style="color:var(--amber-700)">${wobble}</b> wobbling`);
+  if (broken)  parts.push(`<b style="color:var(--off-track)">${broken}</b> off track`);
+  if (wobble)  parts.push(`<b style="color:var(--amber-700)">${wobble}</b> at risk`);
   if (strong)  parts.push(`<b style="color:var(--teal-700)">${strong}</b> strong`);
   document.getElementById("health-vals").innerHTML =
     parts.join(`<span class="dot"></span>`);
@@ -974,15 +982,15 @@ function renderBriefing(items, alerts) {
     now.toLocaleDateString("en-US", {weekday:"short", month:"short", day:"numeric"});
 
   const h = computeHealth(items);
-  setHealthRing(h.pct, h.broken, h.wobble, h.strong, h.theses);
+  setHealthRing(h.pct, h.broken, h.wobble, h.strong, h.plans);
 
   const unread        = alerts.filter(a => !a.read);
-  const actionable    = unread.filter(a => a.new_status === "broken" || a.new_status === "wobbling");
-  const strengthening = unread.filter(a => a.new_status === "strengthening");
+  const actionable    = unread.filter(a => a.new_status === "off_track" || a.new_status === "at_risk");
+  const strengthening = unread.filter(a => a.new_status === "ahead");
   const movedCount = actionable.length + strengthening.length;
   document.getElementById("briefing-sub").textContent = movedCount > 0
     ? `${movedCount} thing${movedCount!==1?"s":""} moved on your watchlist.`
-    : h.theses > 0 ? "Everything looks good." : "No theses yet — go to You to build one.";
+    : h.plans > 0 ? "Everything looks good." : "No plans yet — go to You to add one.";
 
   // Needs attention (broken + wobbling)
   const attnEl = document.getElementById("brief-attention");
@@ -996,10 +1004,10 @@ function renderBriefing(items, alerts) {
   }
 
   // Looking strong (strengthening)
-  const strongEl = document.getElementById("brief-strengthening");
+  const strongEl = document.getElementById("brief-ahead");
   if (strengthening.length) {
     strongEl.innerHTML =
-      `<div class="section-label"><span class="title">Looking strong</span><span class="count">${strengthening.length}</span></div>`+
+      `<div class="section-label"><span class="title">Ahead of plan</span><span class="count">${strengthening.length}</span></div>`+
       strengthening.map(a => alertCard(a, items)).join("");
     wireAlertCard(strongEl, items);
   } else {
@@ -1009,18 +1017,18 @@ function renderBriefing(items, alerts) {
   // Catalysts
   const today = now.toISOString().slice(0,10);
   const cats = [];
-  items.forEach(({thesis}) => (thesis.catalysts||[]).forEach(c => {
-    if (c.expected_date && c.expected_date >= today) cats.push({...c, ticker: thesis.ticker});
+  items.forEach(({plan}) => (plan.events||[]).forEach(c => {
+    if (c.expected_date && c.expected_date >= today) cats.push({...c, ticker: plan.ticker});
   }));
   cats.sort((a,b) => a.expected_date.localeCompare(b.expected_date));
-  const catsEl = document.getElementById("brief-catalysts");
+  const catsEl = document.getElementById("brief-events");
   if (cats.length) {
     catsEl.innerHTML =
-      `<div class="section-label"><span class="title">Upcoming catalysts</span><span class="count">${cats.length}</span></div>`+
+      `<div class="section-label"><span class="title">Upcoming events</span><span class="count">${cats.length}</span></div>`+
       cats.slice(0,3).map(c => `
-        <div class="card severity-catalyst">
+        <div class="card severity-event">
           <div class="row1">
-            <span class="pill catalyst">Catalyst · ${esc(c.expected_date)}</span>
+            <span class="pill event">Event · ${esc(c.expected_date)}</span>
             <span class="ticker">${esc(c.ticker)}</span>
           </div>
           <div class="headline">${esc(c.name)}</div>
@@ -1028,36 +1036,30 @@ function renderBriefing(items, alerts) {
   } else { catsEl.innerHTML = ""; }
 
   // FYI: intact-status alerts (recoveries)
-  const fyi = unread.filter(a => a.new_status === "intact");
+  const fyi = unread.filter(a => a.new_status === "on_track");
   const fyiEl = document.getElementById("brief-fyi");
   if (fyi.length) {
     fyiEl.innerHTML =
-      `<div class="section-label"><span class="title">FYI</span><span class="count">${fyi.length}</span></div>`+
-      fyi.map(a => `
-        <div class="fyi-row">
-          <span class="fticker">${esc(a.ticker)}</span>
-          <div class="ftext"><b>${esc(a.pillar_name)}</b> → ${esc(a.new_status)}. ${esc(a.reasoning.slice(0,80))}${a.reasoning.length>80?"…":""}</div>
-          <span class="ftime">${relTime(a.created_at)}</span>
-        </div>`).join("");
+      ``;  // FYI section dropped — recoveries aren't actionable enough to surface
   } else { fyiEl.innerHTML = ""; }
 }
 
 function alertCard(a, items) {
   const cfg = {
-    broken:        {sev: "break",        sevCls: "severity-break",        label: "Thesis Break",   verbed: "broke",        nudge: "Time to revise this thesis or trigger your exit plan.",                cta: "Revise thesis"},
-    wobbling:      {sev: "wobble",       sevCls: "severity-wobble",       label: "Pillar Wobble",  verbed: "is wobbling",  nudge: "One more weak data point could break this pillar.",                    cta: "Open thesis"},
-    strengthening: {sev: "strengthening", sevCls: "severity-strengthening", label: "Strengthening", verbed: "is strengthening", nudge: "Numbers materially better than your threshold — consider raising the bar.", cta: "Update thesis"},
-  }[a.new_status] || {sev: "fyi", sevCls: "", label: a.new_status, verbed: "moved", nudge: "", cta: "Open thesis"};
-  const item   = items.find(i => i.thesis.ticker === a.ticker);
+    off_track: {sev: "off_track", sevCls: "severity-off_track", label: "Off track", verbed: "is off track",  nudge: "Time to revise this plan or trigger your exit.",                                  cta: "Revise plan"},
+    at_risk:   {sev: "at_risk",   sevCls: "severity-at_risk",   label: "At risk",   verbed: "is at risk",    nudge: "One more weak data point could break this reason.",                               cta: "Ask the bear case"},
+    ahead:     {sev: "ahead",     sevCls: "severity-ahead",     label: "Ahead",     verbed: "is ahead",      nudge: "Numbers materially better than your walk-away signal — consider raising the bar.", cta: "Update plan"},
+  }[a.new_status] || {sev: "fyi", sevCls: "", label: a.new_status, verbed: "moved", nudge: "", cta: "Open plan"};
+  const item   = items.find(i => i.plan.ticker === a.ticker);
   const px     = item?.quote?.last_price;
   const chg    = item?.quote?.day_change_pct;
   const priceStr = px ? `$${fmt(px)}${chg!=null?" · "+(chg>=0?"+":"")+chg.toFixed(1)+"%":""}` : "";
-  const isRevise = a.new_status === "broken" || a.new_status === "strengthening";
-  const askPrompt = a.new_status === "broken"
-    ? `My ${a.ticker} ${a.pillar_name} pillar broke. Walk me through how to revise the thesis — should I exit, lower conviction, or change the threshold?`
-    : a.new_status === "strengthening"
-      ? `My ${a.ticker} ${a.pillar_name} pillar is strengthening. Should I raise the threshold, add conviction, or add to the position?`
-      : `What's the situation with ${a.ticker} — ${a.pillar_name}?`;
+  const isRevise = a.new_status === "off_track" || a.new_status === "ahead";
+  const askPrompt = a.new_status === "off_track"
+    ? `My ${a.ticker} ${a.reason_name} reason is off-track. Walk me through how to revise the plan — should I exit, lower confidence, or change the walk-away signal?`
+    : a.new_status === "ahead"
+      ? `My ${a.ticker} ${a.reason_name} reason is ahead of plan. Should I raise the walk-away signal, add confidence, or add to the position?`
+      : `What's the situation with ${a.ticker} — ${a.reason_name}?`;
   return `
     <div class="card ${cfg.sevCls}">
       <div class="row1">
@@ -1065,17 +1067,17 @@ function alertCard(a, items) {
         <span class="ticker">${esc(a.ticker)} <span class="price">${esc(priceStr)}</span></span>
         <span class="time">${relTime(a.created_at)}</span>
       </div>
-      <div class="headline">${esc(a.pillar_name)} ${esc(cfg.verbed)}.</div>
+      <div class="headline">${esc(a.reason_name)} ${esc(cfg.verbed)}.</div>
       <div class="body-text">${esc(a.reasoning.slice(0,130))}${a.reasoning.length>130?"…":""}</div>
-      <div class="pillar-line">
-        <span class="pdot ${a.old_status}"></span><span>${esc(a.pillar_name)}</span>
+      <div class="reason-line">
+        <span class="pdot ${a.old_status}"></span><span>${esc(a.reason_name)}</span>
         <span class="arrow">→</span>
-        <span class="pdot ${a.new_status}"></span><span class="new-status">${esc(a.new_status)}</span>
+        <span class="pdot ${a.new_status}"></span><span class="new-status">${esc(statusLabel(a.new_status))}</span>
       </div>
       ${cfg.nudge ? `<div class="body-text" style="font-style:italic;color:var(--ink-2);margin-top:6px;margin-bottom:10px;">${esc(cfg.nudge)}</div>` : ""}
       <div class="actions">
         <button class="btn primary" data-ask="${esc(askPrompt)}">${esc(cfg.cta)}</button>
-        <button class="btn" data-open="${esc(a.ticker)}">Open thesis</button>
+        <button class="btn" data-open="${esc(a.ticker)}">Open plan</button>
       </div>
     </div>`;
 }
@@ -1092,48 +1094,48 @@ function wireAlertCard(el, items) {
 // ═══════════════════ THESES ═══════════════════
 function renderTheses(items, alerts) {
   const h = computeHealth(items);
-  const avgConv = items.length ? (items.reduce((s,{thesis})=>s+(thesis.conviction||0),0)/items.length).toFixed(1) : "—";
-  const alertCount = alerts.filter(a => a.new_status !== "intact").length;
+  const avgConv = items.length ? (items.reduce((s,{plan})=>s+(plan.confidence||0),0)/items.length).toFixed(1) : "—";
+  const alertCount = alerts.filter(a => a.new_status !== "on_track").length;
   const today = new Date().toISOString().slice(0,10);
-  const catCount = items.reduce((n,{thesis}) =>
-    n + (thesis.catalysts||[]).filter(c=>c.expected_date>=today).length, 0);
+  const catCount = items.reduce((n,{plan}) =>
+    n + (plan.events||[]).filter(c=>c.expected_date>=today).length, 0);
 
   document.getElementById("theses-sub").textContent =
-    `${h.theses} thesis${h.theses!==1?"es":""} · avg conviction ${avgConv}`;
+    `${h.plans} plan${h.plans!==1?"s":""} · avg confidence ${avgConv}`;
 
   const kpiHealth = document.getElementById("kpi-health");
   kpiHealth.textContent = h.pct + "%";
   kpiHealth.className = "kvalue " + (h.pct>=80?"green":h.pct>=50?"amber":"red");
   document.getElementById("kpi-alerts").textContent   = alertCount;
-  document.getElementById("kpi-alerts-sub").textContent = `${h.broken} break · ${h.wobble} wob`;
+  document.getElementById("kpi-alerts-sub").textContent = `${h.broken} off · ${h.wobble} at risk`;
   document.getElementById("kpi-conv").textContent    = avgConv;
   document.getElementById("kpi-cats").textContent    = catCount;
 
   // Ticker strip
   const strip = document.getElementById("ticker-strip");
   if (items.length) {
-    strip.innerHTML = items.map(({thesis, quote}) => {
+    strip.innerHTML = items.map(({plan, quote}) => {
       const px  = quote?.last_price;
       const chg = quote?.day_change_pct;
-      if (!px) return `<span class="ts-item"><b>${esc(thesis.ticker)}</b></span>`;
+      if (!px) return `<span class="ts-item"><b>${esc(plan.ticker)}</b></span>`;
       const cls  = chg >= 0 ? "up" : "dn";
       const sign = chg >= 0 ? "+" : "";
-      return `<span class="ts-item"><b>${esc(thesis.ticker)}</b> ${fmt(px)} <span class="${cls}">${sign}${chg?.toFixed(1)}%</span></span>`;
+      return `<span class="ts-item"><b>${esc(plan.ticker)}</b> ${fmt(px)} <span class="${cls}">${sign}${chg?.toFixed(1)}%</span></span>`;
     }).join("");
   }
 
   // Thesis cards
   const listEl = document.getElementById("theses-list");
   if (!items.length) {
-    listEl.innerHTML = `<div class="empty-state">No theses yet.<br>Go to <b>You</b> → Build new thesis.</div>`;
+    listEl.innerHTML = `<div class="empty-state">No plans yet.<br>Go to <b>You</b> → Add a plan.</div>`;
     return;
   }
   const sorted = [...items].sort((a,b) => {
-    const s = t => { const w = worstStatus(t.thesis); return w==="broken"?0:w==="wobbling"?1:2; };
+    const s = t => { const w = worstStatus(t.plan); return w==="off_track"?0:w==="at_risk"?1:2; };
     return s(a) - s(b);
   });
-  listEl.innerHTML = sorted.map(item => thesisCard(item)).join("");
-  listEl.querySelectorAll(".thesis-card").forEach(el => {
+  listEl.innerHTML = sorted.map(item => planCard(item)).join("");
+  listEl.querySelectorAll(".plan-card").forEach(el => {
     el.addEventListener("click", () => openDetail(el.dataset.ticker, items));
   });
 
@@ -1143,50 +1145,50 @@ function renderTheses(items, alerts) {
       document.querySelectorAll("#theses-filters .filter").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       const f = btn.dataset.filter;
-      listEl.querySelectorAll(".thesis-card").forEach(card => {
+      listEl.querySelectorAll(".plan-card").forEach(card => {
         let show = true;
-        if (f === "alerts")    show = card.classList.contains("has-break") || card.classList.contains("has-wobble");
-        else if (f === "wobble")    show = card.classList.contains("has-wobble");
-        else if (f === "catalysts") show = card.dataset.hasCat === "1";
+        if (f === "alerts")    show = card.classList.contains("has-off_track") || card.classList.contains("has-at_risk");
+        else if (f === "at_risk")   show = card.classList.contains("has-at_risk");
+        else if (f === "events") show = card.dataset.hasCat === "1";
         card.style.display = show ? "" : "none";
       });
     });
   });
 }
 
-function worstStatus(thesis) {
-  const p = thesis.pillars||[];
-  if (p.some(x=>x.status==="broken"))   return "broken";
-  if (p.some(x=>x.status==="wobbling")) return "wobbling";
-  if (p.some(x=>x.status==="strengthening")) return "strengthening";
-  return "intact";
+function worstStatus(plan) {
+  const rs = plan.reasons||[];
+  if (rs.some(x=>x.status==="off_track")) return "off_track";
+  if (rs.some(x=>x.status==="at_risk"))   return "at_risk";
+  if (rs.some(x=>x.status==="ahead"))     return "ahead";
+  return "on_track";
 }
 
-function thesisCard({thesis, quote, performance}) {
-  const worst = worstStatus(thesis);
-  const border = worst==="broken" ? "has-break"
-               : worst==="wobbling" ? "has-wobble"
-               : worst==="strengthening" ? "has-strong"
+function planCard({plan, quote, performance}) {
+  const worst = worstStatus(plan);
+  const border = worst==="off_track" ? "has-off_track"
+               : worst==="at_risk" ? "has-at_risk"
+               : worst==="ahead" ? "has-ahead"
                : "";
   const px  = performance?.current_price || quote?.last_price;
   const chg = quote?.day_change_pct;
-  const brokenN  = (thesis.pillars||[]).filter(p=>p.status==="broken").length;
-  const wobbleN  = (thesis.pillars||[]).filter(p=>p.status==="wobbling").length;
-  const strongN  = (thesis.pillars||[]).filter(p=>p.status==="strengthening").length;
-  const sevTag   = brokenN  ? `<span class="sev-tag break">${brokenN} BROKEN</span>`
-                 : wobbleN  ? `<span class="sev-tag wobble">${wobbleN} WOBBLE</span>`
-                 : strongN  ? `<span class="sev-tag strong">${strongN} STRONG</span>`
-                 :             `<span class="sev-tag intact">all intact</span>`;
+  const brokenN  = (plan.reasons||[]).filter(p=>p.status==="off_track").length;
+  const wobbleN  = (plan.reasons||[]).filter(p=>p.status==="at_risk").length;
+  const strongN  = (plan.reasons||[]).filter(p=>p.status==="ahead").length;
+  const sevTag   = brokenN  ? `<span class="sev-tag off_track">${brokenN} OFF TRACK</span>`
+                 : wobbleN  ? `<span class="sev-tag at_risk">${wobbleN} AT RISK</span>`
+                 : strongN  ? `<span class="sev-tag ahead">${strongN} AHEAD</span>`
+                 :             `<span class="sev-tag on_track">all on track</span>`;
   const today = new Date().toISOString().slice(0,10);
-  const hasCat = (thesis.catalysts||[]).some(c=>c.expected_date>=today) ? "1" : "0";
-  const convPct = ((thesis.conviction-1)/9*100).toFixed(0);
-  const pillarsHtml = (thesis.pillars||[]).map(p =>
+  const hasCat = (plan.events||[]).some(c=>c.expected_date>=today) ? "1" : "0";
+  const convPct = ((plan.confidence-1)/9*100).toFixed(0);
+  const reasonsHtml = (plan.reasons||[]).map(p =>
     `<div class="p-row ${p.status}"><span class="led"></span><span class="pname">${esc(p.name)}</span><span class="pval">${esc(p.current_value||"")}</span></div>`
   ).join("");
 
-  // Per-thesis watcher footer
-  const lastCheck = lastCheckForTicker(thesis.ticker);
-  const tickerAlerts = (_data?.alerts || []).filter(a => a.ticker === thesis.ticker);
+  // Per-plan watcher footer
+  const lastCheck = lastCheckForTicker(plan.ticker);
+  const tickerAlerts = (_data?.alerts || []).filter(a => a.ticker === plan.ticker);
   const unreadCount  = tickerAlerts.filter(a => !a.read).length;
   const totalAlerts  = tickerAlerts.length;
   const watcherFooter = lastCheck
@@ -1202,67 +1204,67 @@ function thesisCard({thesis, quote, performance}) {
   const tkrBadge = unreadCount ? `<span class="tkr-badge">${unreadCount}</span>` : "";
 
   return `
-    <div class="thesis-card ${border}" data-ticker="${esc(thesis.ticker)}" data-has-cat="${hasCat}">
+    <div class="plan-card ${border}" data-ticker="${esc(plan.ticker)}" data-has-cat="${hasCat}">
       <div class="tc-row1">
-        <span class="tkr">${esc(thesis.ticker)}${tkrBadge}</span>
-        <span class="tname" title="${esc(thesis.one_liner)}">${esc((thesis.one_liner||"").slice(0,38))}</span>
+        <span class="tkr">${esc(plan.ticker)}${tkrBadge}</span>
+        <span class="tname" title="${esc(plan.one_liner)}">${esc((plan.one_liner||"").slice(0,38))}</span>
         ${px?`<span class="tprice">$${fmt(px)}<span class="tchg ${chg>=0?"up":"dn"}">${chg!=null?(chg>=0?"+":"")+chg.toFixed(1)+"%":""}</span></span>`:""}
       </div>
       <div class="tc-row2">
         <span>conv</span>
         <span class="conv-bar"><i style="width:${convPct}%"></i></span>
-        <b>${thesis.conviction}</b>
+        <b>${plan.confidence}</b>
         <span class="sep">·</span>
-        <span>${esc(thesis.time_horizon||"")}</span>
+        <span>${esc(plan.time_horizon||"")}</span>
         <span class="sep">·</span>
         ${sevTag}
       </div>
-      ${pillarsHtml?`<div class="pillars-grid">${pillarsHtml}</div>`:""}
+      ${reasonsHtml?`<div class="reasons-grid">${reasonsHtml}</div>`:""}
       ${watcherFooter}
     </div>`;
 }
 
 // ═══════════════════ DETAIL ═══════════════════
 function openDetail(ticker, items) {
-  const item = items.find(i => i.thesis.ticker === ticker);
+  const item = items.find(i => i.plan.ticker === ticker);
   if (!item) return;
   renderDetail(item);
   showScreen("detail");
 }
 
-function renderDetail({thesis, quote, performance}) {
+function renderDetail({plan, quote, performance}) {
   const px  = performance?.current_price || quote?.last_price;
   const chg = quote?.day_change_pct;
   const chgCls = chg >= 0 ? "up" : "dn";
   const chgStr = chg != null ? `${chg>=0?"+":""}${chg.toFixed(1)}% today` : "";
-  const pillarsHtml = (thesis.pillars||[]).map(p => {
-    const signalsHtml = (p.watch_signals||[]).length
-      ? `<div class="k">Signals</div><div class="v"><div class="signals">${(p.watch_signals||[]).map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div></div>`
+  const reasonsHtml = (plan.reasons||[]).map(r => {
+    const signalsHtml = (r.data_sources||[]).length
+      ? `<div class="k">Signals</div><div class="v"><div class="signals">${(r.data_sources||[]).map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div></div>`
       : "";
     return `
-      <div class="pillar-detail ${p.status}">
+      <div class="reason-detail ${r.status}">
         <div class="pdhead">
-          <span class="pdot ${p.status}"></span>
-          <span class="pdname">${esc(p.name)}</span>
-          <span class="spill">${esc(p.status.charAt(0).toUpperCase()+p.status.slice(1))}</span>
+          <span class="pdot ${r.status}"></span>
+          <span class="pdname">${esc(r.name)}</span>
+          <span class="spill">${esc(statusLabel(r.status))}</span>
         </div>
         <div class="kv">
           <div class="k">Current</div>
-          <div class="v ${p.status==="broken"?"broken":""}"><b>${esc(p.current_value||"—")}</b></div>
-          <div class="k">Threshold</div>
-          <div class="v">${esc(p.threshold_break||"—")}</div>
+          <div class="v ${r.status==="off_track"?"off_track":""}"><b>${esc(r.current_value||"—")}</b></div>
+          <div class="k">Walk-away signal</div>
+          <div class="v">${esc(r.walk_away_signal||"—")}</div>
           ${signalsHtml}
         </div>
       </div>`;
   }).join("");
 
-  // Per-thesis watcher status
-  const lastCheck = lastCheckForTicker(thesis.ticker);
+  // Per-plan watcher status
+  const lastCheck = lastCheckForTicker(plan.ticker);
   const lastCheckHtml = lastCheck
     ? (() => {
         const ago = relTime(lastCheck.run.ran_at);
         const r = lastCheck.result;
-        const detail = !r.ok ? `<span style="color:var(--broken)">check failed</span>`
+        const detail = !r.ok ? `<span style="color:var(--off-track)">check failed</span>`
                      : r.alerts > 0 ? `${r.alerts} update${r.alerts!==1?"s":""}`
                      : "no changes";
         return `<div class="watcher" style="margin: 12px 4px 14px;">
@@ -1275,91 +1277,91 @@ function renderDetail({thesis, quote, performance}) {
         <span>Not yet checked by watcher</span>
       </div>`;
 
-  // Per-thesis recent updates (alerts for this ticker)
+  // Per-plan recent updates (alerts for this ticker)
   const tickerAlerts = (_data?.alerts || [])
-    .filter(a => a.ticker === thesis.ticker)
+    .filter(a => a.ticker === plan.ticker)
     .slice(0, 10);
   const unreadIds = tickerAlerts.filter(a => !a.read).map(a => a.id);
 
-  const STATUS_LABEL = {intact:"Intact", wobbling:"Wobbling", broken:"Broken", strengthening:"Strengthening"};
+  // STATUS_LABEL is global (top of script)
   const updatesHtml = tickerAlerts.length
     ? tickerAlerts.map(a => `
         <div class="card" style="padding:12px 14px;margin-bottom:8px;${
-          a.new_status==="broken"        ? "border-left:3px solid var(--broken);" :
-          a.new_status==="wobbling"      ? "border-left:3px solid var(--wobble);" :
-          a.new_status==="strengthening" ? "border-left:3px solid var(--strengthening);" :
-                                           "border-left:3px solid var(--intact);"
+          a.new_status==="off_track"     ? "border-left:3px solid var(--off-track);" :
+          a.new_status==="at_risk"       ? "border-left:3px solid var(--at-risk);" :
+          a.new_status==="ahead"         ? "border-left:3px solid var(--ahead);" :
+                                           "border-left:3px solid var(--on-track);"
         }">
           <div class="row1" style="margin-bottom:6px;">
             <span class="pdot ${a.new_status}"></span>
-            <span style="font-weight:600;font-size:13px;">${esc(a.pillar_name)}</span>
-            <span style="font-size:11px;color:var(--ink-3);">${esc(a.old_status)} → <b style="color:var(--ink);">${esc(a.new_status)}</b></span>
-            <span class="time">${relTime(a.created_at)}${a.read?"":" · <b style='color:var(--broken)'>new</b>"}</span>
+            <span style="font-weight:600;font-size:13px;">${esc(a.reason_name)}</span>
+            <span style="font-size:11px;color:var(--ink-3);">${esc(statusLabel(a.old_status))} → <b style="color:var(--ink);">${esc(statusLabel(a.new_status))}</b></span>
+            <span class="time">${relTime(a.created_at)}${a.read?"":" · <b style='color:var(--off-track)'>new</b>"}</span>
           </div>
           <div class="body-text" style="font-size:13px;margin:0;color:var(--ink-2);line-height:1.45;">${esc(a.reasoning)}</div>
         </div>`).join("")
-    : `<div class="empty-state" style="padding:24px 12px;">No watcher activity for this thesis yet.</div>`;
+    : `<div class="empty-state" style="padding:24px 12px;">No watcher activity for this plan yet.</div>`;
 
   document.getElementById("detail-content").innerHTML = `
     <header class="page">
-      <button class="back" onclick="showScreen('theses')">← Theses</button>
+      <button class="back" onclick="showScreen('theses')">← Plans</button>
       <div class="detail-header">
         <div class="drow1">
-          <span class="dtkr">${esc(thesis.ticker)}</span>
-          <span class="dname">${esc((thesis.one_liner||"").slice(0,50))}</span>
+          <span class="dtkr">${esc(plan.ticker)}</span>
+          <span class="dname">${esc((plan.one_liner||"").slice(0,50))}</span>
         </div>
         ${px?`<div class="dprice-row"><span class="dpx">$${fmt(px)}</span><span class="dchg ${chgCls}">${chgStr}</span></div>`:""}
         <div class="meta-row">
-          <span class="chip">${esc(thesis.direction)} · ${esc(thesis.time_horizon||"")}</span>
-          <span class="chip">Conviction ${thesis.conviction}/10</span>
+          <span class="chip">${esc(plan.direction)} · ${esc(plan.time_horizon||"")}</span>
+          <span class="chip">Confidence ${plan.confidence}/10</span>
         </div>
       </div>
     </header>
     ${lastCheckHtml}
     <div id="detail-chart"><div class="loading">Loading price chart…</div></div>
     <div class="section-label">
-      <span class="title">Pillars · ${(thesis.pillars||[]).length}</span>
+      <span class="title">Reasons · ${(plan.reasons||[]).length}</span>
     </div>
-    ${pillarsHtml||`<div class="empty-state">No pillars defined.</div>`}
-    <div class="section-label">
-      <span class="title">Recent watcher updates</span>
-      ${tickerAlerts.length ? `<span class="count">${tickerAlerts.length}</span>` : ""}
-    </div>
-    ${updatesHtml}
+    ${reasonsHtml||`<div class="empty-state">No reasons defined.</div>`}
     <div id="detail-timeline"><div class="loading">Loading timeline…</div></div>
     <div style="display:flex;gap:8px;margin-top:16px;padding-bottom:24px;flex-wrap:wrap;">
-      <button class="btn primary" id="detail-validate-btn" style="flex:1 1 100%;">🔍 Validate thesis (back-check)</button>
-      <button class="btn primary" id="detail-run-btn" style="flex:1 1 100%;">↻ Run watcher for ${esc(thesis.ticker)}</button>
-      <button class="btn" id="detail-ask-btn">Ask analyst</button>
-      <button class="btn" onclick="showWizardForm()">Edit thesis</button>
+      <button class="btn primary" id="detail-validate-btn" style="flex:1 1 100%;">🔍 Review this plan</button>
+      <button class="btn primary" id="detail-run-btn" style="flex:1 1 100%;">↻ Refresh checks for ${esc(plan.ticker)}</button>
+      <button class="btn" id="detail-ask-btn">Ask</button>
+      <button class="btn" id="detail-edit-btn">Edit plan</button>
     </div>`;
 
   document.getElementById("detail-ask-btn").addEventListener("click", () => {
     showScreen("ask");
-    sendChat(`Analyze my ${thesis.ticker} thesis in detail — what should I know?`);
+    sendChat(`Analyze my ${plan.ticker} plan in detail — what should I know?`);
   });
-  document.getElementById("detail-run-btn")?.addEventListener("click", () => runWatcherForTicker(thesis.ticker));
-  document.getElementById("detail-validate-btn")?.addEventListener("click", () => validateThesis(thesis.ticker));
+  document.getElementById("detail-run-btn")?.addEventListener("click", () => runWatcherForTicker(plan.ticker));
+  document.getElementById("detail-validate-btn")?.addEventListener("click", () => reviewPlan(plan.ticker));
+  // Fix: Edit thesis previously opened blank wizard; now opens the review form for this plan.
+  document.getElementById("detail-edit-btn")?.addEventListener("click", () => {
+    wizardOverlay.style.display = "block";
+    renderPlanReviewForm(plan);
+  });
 
-  // Mark this thesis's alerts as read once the user views the detail
+  // Mark this plan's alerts as read once the user views the detail
   if (unreadIds.length) markAlertsRead(unreadIds);
 
   // Lazy-load chart + timeline (history + news)
-  loadDetailExtras(thesis, tickerAlerts);
+  loadDetailExtras(plan, tickerAlerts);
 }
 
 // ═══════════════════ CHART + TIMELINE ═══════════════════
 const _detailCache = new Map();  // ticker → {history, news} per period
 
-async function loadDetailExtras(thesis, alerts, period) {
-  const ticker = thesis.ticker;
+async function loadDetailExtras(plan, alerts, period) {
+  const ticker = plan.ticker;
   const key = `${ticker}_${period||"auto"}`;
   let extras = _detailCache.get(key);
   if (!extras) {
     try {
       const url = period
-        ? `/thesis/${encodeURIComponent(ticker)}/detail?period=${encodeURIComponent(period)}`
-        : `/thesis/${encodeURIComponent(ticker)}/detail`;
+        ? `/plan/${encodeURIComponent(ticker)}?period=${encodeURIComponent(period)}`
+        : `/plan/${encodeURIComponent(ticker)}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(res.statusText);
       extras = await res.json();
@@ -1370,11 +1372,11 @@ async function loadDetailExtras(thesis, alerts, period) {
       return;
     }
   }
-  renderPriceChart(thesis, alerts, extras.history, period);
-  renderTimeline(thesis, alerts, extras.news);
+  renderPriceChart(plan, alerts, extras.history, period);
+  renderTimeline(plan, alerts, extras.news);
 }
 
-function renderPriceChart(thesis, alerts, history, currentPeriod) {
+function renderPriceChart(plan, alerts, history, currentPeriod) {
   const c = document.getElementById("detail-chart");
   if (!c) return;
   if (!history || history.error || !(history.closes && history.closes.length)) {
@@ -1405,7 +1407,7 @@ function renderPriceChart(thesis, alerts, history, currentPeriod) {
   const areaCol = isUp ? "rgba(16,185,129,0.10)" : "rgba(239,68,68,0.08)";
 
   // Entry-price reference line
-  const entry = thesis.entry_price;
+  const entry = plan.entry_price;
   let entryLine = "";
   if (entry != null && entry >= min - range*0.05 && entry <= max + range*0.05) {
     const y = Math.max(0, Math.min(H, H - ((entry - min) / range) * H));
@@ -1423,9 +1425,9 @@ function renderPriceChart(thesis, alerts, history, currentPeriod) {
     if (idx === -1) idx = closes.length - 1;
     if (idx < 0) return "";
     const [x, y] = pts[idx];
-    const color = a.new_status === "broken" ? "#ef4444"
-                : a.new_status === "wobbling" ? "#f59e0b"
-                : a.new_status === "strengthening" ? "#14b8a6"
+    const color = a.new_status === "off_track" ? "#ef4444"
+                : a.new_status === "at_risk" ? "#f59e0b"
+                : a.new_status === "ahead" ? "#14b8a6"
                 : "#10b981";
     return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${color}" stroke="white" stroke-width="1.4" vector-effect="non-scaling-stroke" />`;
   }).join("");
@@ -1441,7 +1443,7 @@ function renderPriceChart(thesis, alerts, history, currentPeriod) {
         <span class="title">Price · ${esc(activePeriod)}</span>
         <span class="stats">
           $${fmt(min)}–$${fmt(max)} ·
-          <b style="color:${isUp?'var(--emerald-700)':'var(--broken)'}">${esc(retStr)}</b>
+          <b style="color:${isUp?'var(--emerald-700)':'var(--off-track)'}">${esc(retStr)}</b>
         </span>
       </div>
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
@@ -1467,7 +1469,7 @@ function renderPriceChart(thesis, alerts, history, currentPeriod) {
     b.addEventListener("click", () => {
       const p = b.dataset.period;
       if (p === activePeriod) return;
-      loadDetailExtras(thesis, alerts, p);
+      loadDetailExtras(plan, alerts, p);
     });
   });
 }
@@ -1480,14 +1482,14 @@ function formatTimelineDate(iso) {
   } catch { return String(iso).slice(0,10); }
 }
 
-function renderTimeline(thesis, alerts, news) {
+function renderTimeline(plan, alerts, news) {
   const c = document.getElementById("detail-timeline");
   if (!c) return;
 
   const events = [];
 
   // Journal entries — parse leading date
-  (thesis.journal || []).forEach(entry => {
+  (plan.journal || []).forEach(entry => {
     const m = entry.match(/^(\d{4}-\d{2}-\d{2})\s*:\s*(.*)$/);
     if (m) events.push({date: m[1] + "T00:00:00Z", type: "journal", title: m[2]});
     else events.push({date: null, type: "journal", title: entry});
@@ -1498,7 +1500,7 @@ function renderTimeline(thesis, alerts, news) {
     date: a.created_at,
     type: "alert",
     statusClass: `alert-${a.new_status}`,
-    title: `${a.pillar_name}: ${a.old_status} → ${a.new_status}`,
+    title: `${a.reason_name}: ${statusLabel(a.old_status)} → ${statusLabel(a.new_status)}`,
     detail: a.reasoning,
   }));
 
@@ -1516,10 +1518,10 @@ function renderTimeline(thesis, alerts, news) {
 
   // Catalysts (separate future + past)
   const today = new Date().toISOString().slice(0,10);
-  (thesis.catalysts || []).forEach(cat => {
+  (plan.events || []).forEach(cat => {
     if (cat.expected_date) events.push({
       date: cat.expected_date + "T00:00:00Z",
-      type: "catalyst",
+      type: "event",
       title: cat.name,
       detail: cat.expected_date >= today ? "Upcoming" : "Past",
       future: cat.expected_date >= today,
@@ -1608,7 +1610,7 @@ async function runWatcherForTicker(ticker) {
     showToast(`${ticker} done — ${data.new_alerts} new alert${data.new_alerts!==1?"s":""}`);
     await loadPortfolio();
     // Re-render the detail screen with refreshed data
-    const item = _data?.items?.find(i => i.thesis.ticker === ticker);
+    const item = _data?.items?.find(i => i.plan.ticker === ticker);
     if (item) renderDetail(item);
   } catch(e) {
     showToast("Watcher failed: " + e.message);
@@ -1740,11 +1742,11 @@ function parseSSE(raw) {
 
 // ═══════════════════ WIZARD ═══════════════════
 const wizardOverlay = document.getElementById("wizard-overlay");
-document.getElementById("build-thesis-btn").addEventListener("click", showWizardForm);
+document.getElementById("add-plan-btn").addEventListener("click", showWizardForm);
 document.getElementById("wizard-close").addEventListener("click", () => { wizardOverlay.style.display = "none"; });
 
 function showWizardForm() {
-  document.getElementById("wizard-title").textContent = "Build Investment Thesis";
+  document.getElementById("wizard-title").textContent = "Add a Plan";
   document.getElementById("wizard-body").innerHTML = `
     <div class="wiz-row">
       <div class="wiz-col">
@@ -1752,11 +1754,11 @@ function showWizardForm() {
         <input class="wiz-input" id="wiz-ticker" placeholder="MSFT" style="text-transform:uppercase" maxlength="10">
       </div>
       <div class="wiz-col">
-        <label class="wiz-label">Purchase Price (USD)</label>
+        <label class="wiz-label">Purchase price (USD)</label>
         <input class="wiz-input" id="wiz-price" type="number" step="0.01" placeholder="389.00">
       </div>
     </div>
-    <label class="wiz-label">Your thesis notes (raw reasoning is fine)</label>
+    <label class="wiz-label">Your notes (raw reasoning is fine)</label>
     <textarea class="wiz-input" id="wiz-notes" rows="6" placeholder="e.g. Memory chips in high demand from AI boom…"></textarea>
     <button id="wiz-submit" style="background:var(--ink);color:white;border:0;border-radius:10px;padding:12px 20px;font-weight:600;cursor:pointer;width:100%;font-size:15px;font-family:inherit;">
       Analyze &amp; Build →
@@ -1766,7 +1768,7 @@ function showWizardForm() {
   document.getElementById("wiz-ticker").focus();
 }
 
-const STEP_LABELS = {draft:"Drafting thesis skeleton", research:"Fetching live market data", refine:"Refining with research", done:"Finalizing & validating"};
+const STEP_LABELS = {draft:"Drafting plan skeleton", research:"Fetching live market data", refine:"Refining with research", done:"Finalizing & checking"};
 const STEP_ORDER  = ["draft","research","refine","done"];
 
 async function startWizardBuild() {
@@ -1775,16 +1777,16 @@ async function startWizardBuild() {
   const notes  = (document.getElementById("wiz-notes").value||"").trim();
   if (!ticker || !price || !notes) { alert("Please fill in all three fields."); return; }
 
-  document.getElementById("wizard-title").textContent = `Building thesis for ${ticker}…`;
+  document.getElementById("wizard-title").textContent = `Building plan for ${ticker}…`;
   document.getElementById("wizard-body").innerHTML =
     STEP_ORDER.map(s =>
       `<div class="step-item" id="step-${s}"><span class="step-icon" id="icon-${s}">○</span><span>${STEP_LABELS[s]}</span></div>`
     ).join("") +
     `<div id="wiz-log" style="color:var(--ink-3);font-size:12px;margin-top:14px;min-height:32px;"></div>`;
 
-  let finalThesis = null;
+  let finalPlan = null;
   try {
-    const res = await fetch("/thesis/build", {
+    const res = await fetch("/plan/build", {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ticker, purchase_price: price, current_note: notes}),
     });
@@ -1803,116 +1805,116 @@ async function startWizardBuild() {
         if (log) {
           if (data.step === "research" && data.data?.price)
             log.textContent = `Live price: $${Number(data.data.price).toFixed(2)}`;
-          if (data.step === "draft" && data.data?.pillar_count)
-            log.textContent = `Identified ${data.data.pillar_count} thesis pillars`;
+          if (data.step === "draft" && data.data?.reason_count)
+            log.textContent = `Identified ${data.data.reason_count} reasons`;
         }
-      } else if (event === "thesis_ready") {
-        finalThesis = data.thesis;
+      } else if (event === "plan_ready") {
+        finalPlan = data.plan;
       } else if (event === "error" && log) {
-        log.innerHTML = `<span style="color:var(--broken)">Error: ${esc(data.message)}</span>`;
-      } else if (event === "done" && finalThesis) {
-        renderThesisReviewForm(finalThesis);
+        log.innerHTML = `<span style="color:var(--off-track)">Error: ${esc(data.message)}</span>`;
+      } else if (event === "done" && finalPlan) {
+        renderPlanReviewForm(finalPlan);
       }
     });
   } catch(e) {
     document.getElementById("wizard-body").innerHTML +=
-      `<p style="color:var(--broken);margin-top:12px">Error: ${esc(e.message)}</p>`;
+      `<p style="color:var(--off-track);margin-top:12px">Error: ${esc(e.message)}</p>`;
   }
 }
 
-function renderThesisReviewForm(thesis) {
-  document.getElementById("wizard-title").textContent = `Review: ${thesis.ticker}`;
-  const ep = thesis.exit_plan || {};
+function renderPlanReviewForm(thesis) {
+  document.getElementById("wizard-title").textContent = `Review: ${plan.ticker}`;
+  const ep = plan.exit_triggers || {};
   let html = `
     <label class="wiz-label">One-liner</label>
-    <input class="wiz-input" id="tf-one_liner" value="${ea(thesis.one_liner)}">
+    <input class="wiz-input" id="tf-one_liner" value="${ea(plan.one_liner)}">
     <div class="wiz-row">
       <div class="wiz-col">
         <label class="wiz-label">Direction</label>
         <select class="wiz-input" id="tf-direction">
-          <option ${thesis.direction==="long"?"selected":""}>long</option>
-          <option ${thesis.direction==="short"?"selected":""}>short</option>
+          <option ${plan.direction==="long"?"selected":""}>long</option>
+          <option ${plan.direction==="short"?"selected":""}>short</option>
         </select>
       </div>
       <div class="wiz-col">
-        <label class="wiz-label">Conviction (1–10)</label>
-        <input class="wiz-input" id="tf-conviction" type="number" min="1" max="10" value="${thesis.conviction}">
+        <label class="wiz-label">Confidence (1–10)</label>
+        <input class="wiz-input" id="tf-confidence" type="number" min="1" max="10" value="${plan.confidence}">
       </div>
       <div class="wiz-col">
         <label class="wiz-label">Time Horizon</label>
-        <input class="wiz-input" id="tf-time_horizon" value="${ea(thesis.time_horizon)}">
+        <input class="wiz-input" id="tf-time_horizon" value="${ea(plan.time_horizon)}">
       </div>
     </div>
-    <div class="wiz-section-label">Pillars</div>`;
-  (thesis.pillars||[]).forEach((p,i) => { html += `
-    <div class="pillar-card">
+    <div class="wiz-section-label">Reasons</div>`;
+  (plan.reasons||[]).forEach((r,i) => { html += `
+    <div class="wiz-reason-card">
       <label class="wiz-label">Name</label>
-      <input class="wiz-input" id="pillar-${i}-name" value="${ea(p.name)}">
-      <label class="wiz-label">Current Value</label>
-      <input class="wiz-input" id="pillar-${i}-current_value" value="${ea(p.current_value)}">
-      <label class="wiz-label">Threshold Break</label>
-      <input class="wiz-input" id="pillar-${i}-threshold_break" value="${ea(p.threshold_break)}">
-      <label class="wiz-label">Watch Signals (comma-separated)</label>
-      <input class="wiz-input" id="pillar-${i}-watch_signals" value="${ea((p.watch_signals||[]).join(", "))}">
+      <input class="wiz-input" id="reason-${i}-name" value="${ea(r.name)}">
+      <label class="wiz-label">Current value</label>
+      <input class="wiz-input" id="reason-${i}-current_value" value="${ea(r.current_value)}">
+      <label class="wiz-label">Walk-away signal</label>
+      <input class="wiz-input" id="reason-${i}-walk_away_signal" value="${ea(r.walk_away_signal)}">
+      <label class="wiz-label">Data sources (comma-separated)</label>
+      <input class="wiz-input" id="reason-${i}-data_sources" value="${ea((r.data_sources||[]).join(", "))}">
     </div>`; });
   html += `
-    <div class="wiz-section-label">Exit Plan</div>
-    <label class="wiz-label">Take Profit</label>
+    <div class="wiz-section-label">When to exit</div>
+    <label class="wiz-label">Take profit</label>
     <input class="wiz-input" id="tf-take_profit" value="${ea(ep.take_profit||"")}">
-    <label class="wiz-label">Thesis Break Condition</label>
-    <input class="wiz-input" id="tf-thesis_break" value="${ea(ep.thesis_break||"")}">
-    <label class="wiz-label">Time Stop</label>
+    <label class="wiz-label">Plan-break condition</label>
+    <input class="wiz-input" id="tf-plan_break" value="${ea(ep.plan_break||"")}">
+    <label class="wiz-label">Time stop</label>
     <input class="wiz-input" id="tf-time_stop" value="${ea(ep.time_stop||"")}">
     <div style="display:flex;gap:12px;margin-top:20px;padding-bottom:40px;">
       <button id="wiz-back" style="background:#f3f4f6;color:var(--ink);border:1px solid var(--hair);border-radius:10px;padding:10px 20px;cursor:pointer;font-family:inherit;">← Back</button>
-      <button id="wiz-save" style="flex:1;background:var(--emerald-700);color:white;border:0;border-radius:10px;padding:10px 20px;font-weight:600;cursor:pointer;font-size:15px;font-family:inherit;">Save Thesis ✓</button>
+      <button id="wiz-save" style="flex:1;background:var(--emerald-700);color:white;border:0;border-radius:10px;padding:10px 20px;font-weight:600;cursor:pointer;font-size:15px;font-family:inherit;">Save plan ✓</button>
     </div>`;
   const body = document.getElementById("wizard-body");
   body.innerHTML = html;
-  body.dataset.pillarCount = (thesis.pillars||[]).length;
-  body.dataset.ticker = thesis.ticker;
+  body.dataset.reasonCount = (plan.reasons||[]).length;
+  body.dataset.ticker = plan.ticker;
   document.getElementById("wiz-back").addEventListener("click", showWizardForm);
-  document.getElementById("wiz-save").addEventListener("click", () => saveThesis(thesis));
+  document.getElementById("wiz-save").addEventListener("click", () => savePlan(plan));
 }
 
-async function saveThesis(orig) {
+async function savePlan(orig) {
   const body  = document.getElementById("wizard-body");
-  const count = parseInt(body.dataset.pillarCount, 10);
-  const pillars = [];
-  for (let i=0; i<count; i++) pillars.push({
-    name:            document.getElementById(`pillar-${i}-name`).value,
-    current_value:   document.getElementById(`pillar-${i}-current_value`).value,
-    threshold_break: document.getElementById(`pillar-${i}-threshold_break`).value,
-    watch_signals:   document.getElementById(`pillar-${i}-watch_signals`).value.split(",").map(s=>s.trim()).filter(Boolean),
-    // Preserve watcher-driven status from the original thesis; never overwrite from the form.
-    status: (orig?.pillars?.[i]?.status) || "intact",
+  const count = parseInt(body.dataset.reasonCount, 10);
+  const reasons = [];
+  for (let i=0; i<count; i++) reasons.push({
+    name:             document.getElementById(`reason-${i}-name`).value,
+    current_value:    document.getElementById(`reason-${i}-current_value`).value,
+    walk_away_signal: document.getElementById(`reason-${i}-walk_away_signal`).value,
+    data_sources:     document.getElementById(`reason-${i}-data_sources`).value.split(",").map(s=>s.trim()).filter(Boolean),
+    // Preserve watcher-driven status from the original plan; never overwrite from the form.
+    status: (orig?.reasons?.[i]?.status) || "on_track",
   });
-  const thesis = {
+  const plan = {
     ...orig, ticker: body.dataset.ticker,
     one_liner:    document.getElementById("tf-one_liner").value,
     direction:    document.getElementById("tf-direction").value,
-    conviction:   parseInt(document.getElementById("tf-conviction").value, 10),
+    confidence:   parseInt(document.getElementById("tf-confidence").value, 10),
     time_horizon: document.getElementById("tf-time_horizon").value,
-    pillars,
-    exit_plan: {
-      take_profit:  document.getElementById("tf-take_profit").value  || null,
-      thesis_break: document.getElementById("tf-thesis_break").value || null,
-      time_stop:    document.getElementById("tf-time_stop").value    || null,
+    reasons,
+    exit_triggers: {
+      take_profit: document.getElementById("tf-take_profit").value || null,
+      plan_break:  document.getElementById("tf-plan_break").value  || null,
+      time_stop:   document.getElementById("tf-time_stop").value   || null,
     },
     last_updated: new Date().toISOString(),
   };
   const btn = document.getElementById("wiz-save");
   btn.disabled = true; btn.textContent = "Saving…";
   try {
-    const res  = await fetch("/thesis/save", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({thesis})});
+    const res  = await fetch("/plan/save", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({plan})});
     const data = await res.json();
     if (data.ok) {
       wizardOverlay.style.display = "none";
-      showToast(`Thesis for ${data.ticker} saved ✓`);
+      showToast(`Plan for ${data.ticker} saved ✓`);
       await loadPortfolio();
     } else throw new Error(data.detail || "Unknown error");
   } catch(e) {
-    btn.disabled = false; btn.textContent = "Save Thesis ✓";
+    btn.disabled = false; btn.textContent = "Save plan ✓";
     alert("Save failed: " + e.message);
   }
 }
@@ -1929,7 +1931,7 @@ const VALIDATE_STEP_LABELS = {
 };
 const VALIDATE_STEP_ORDER = ["gather", "analyze", "done"];
 
-async function validateThesis(ticker) {
+async function reviewPlan(ticker) {
   document.getElementById("wizard-title").textContent = `Back-checking ${ticker}…`;
   document.getElementById("wizard-body").innerHTML =
     VALIDATE_STEP_ORDER.map(s =>
@@ -1940,7 +1942,7 @@ async function validateThesis(ticker) {
 
   let report = null;
   try {
-    const res = await fetch(`/thesis/${encodeURIComponent(ticker)}/validate`, {method: "POST"});
+    const res = await fetch(`/plan/${encodeURIComponent(ticker)}/review`, {method: "POST"});
     if (!res.ok) {
       const err = await res.json().catch(() => ({detail: res.statusText}));
       throw new Error(err.detail || res.statusText);
@@ -1960,27 +1962,27 @@ async function validateThesis(ticker) {
           if (data.step === "gather" && data.data?.period)
             log.textContent = `Pulled ${data.data.history_points || 0} price points (${data.data.period}) · ${data.data.alerts || 0} prior watcher alerts`;
           if (data.step === "analyze" && data.data?.recommendation)
-            log.textContent = `Recommendation: ${data.data.recommendation} · ${data.data.pillar_reviews} pillar verdict${data.data.pillar_reviews!==1?"s":""}`;
+            log.textContent = `Recommendation: ${data.data.recommendation} · ${data.data.reason_reviews} pillar verdict${data.data.reason_reviews!==1?"s":""}`;
         }
-      } else if (event === "validation_ready") {
+      } else if (event === "review_ready") {
         report = data;
       } else if (event === "error" && log) {
-        log.innerHTML = `<span style="color:var(--broken)">Error: ${esc(data.message)}</span>`;
+        log.innerHTML = `<span style="color:var(--off-track)">Error: ${esc(data.message)}</span>`;
       } else if (event === "done" && report) {
-        renderValidationReport(report);
+        renderReviewReport(report);
       }
     });
   } catch (e) {
     document.getElementById("wizard-body").innerHTML +=
-      `<p style="color:var(--broken);margin-top:12px">Error: ${esc(e.message)}</p>`;
+      `<p style="color:var(--off-track);margin-top:12px">Error: ${esc(e.message)}</p>`;
   }
 }
 
-function renderValidationReport({ticker, thesis, validation}) {
+function renderReviewReport({ticker, plan, review}) {
   document.getElementById("wizard-title").textContent = `Back-check: ${ticker}`;
-  const v = validation || {};
+  const v = review || {};
   const p = v.performance_summary || {};
-  const reviews = v.pillar_reviews || [];
+  const reviews = v.reason_reviews || [];
   const lessons = v.lessons || [];
   const proposed = v.proposed_changes || {};
   const changedFields = proposed.changed_fields || [];
@@ -1994,9 +1996,9 @@ function renderValidationReport({ticker, thesis, validation}) {
         <div style="color:var(--ink-3);text-transform:uppercase;font-size:10px;letter-spacing:.06em;font-weight:700;">Entry → now</div>
         <div><b>$${fmt(p.entry_price)}</b> → <b>$${fmt(p.current_price)}</b></div>
         <div style="color:var(--ink-3);text-transform:uppercase;font-size:10px;letter-spacing:.06em;font-weight:700;">Return</div>
-        <div><b style="color:${(p.return_pct||0)>=0?"var(--emerald-700)":"var(--broken)"}">${p.return_pct!=null?(p.return_pct>=0?"+":"")+p.return_pct.toFixed(1)+"%":"—"}</b> over ${p.duration_days||0} days</div>
+        <div><b style="color:${(p.return_pct||0)>=0?"var(--emerald-700)":"var(--off-track)"}">${p.return_pct!=null?(p.return_pct>=0?"+":"")+p.return_pct.toFixed(1)+"%":"—"}</b> over ${p.duration_days||0} days</div>
         <div style="color:var(--ink-3);text-transform:uppercase;font-size:10px;letter-spacing:.06em;font-weight:700;">Max drawdown</div>
-        <div><b style="color:var(--broken)">${p.max_drawdown_pct!=null?p.max_drawdown_pct.toFixed(1)+"%":"—"}</b></div>
+        <div><b style="color:var(--off-track)">${p.max_drawdown_pct!=null?p.max_drawdown_pct.toFixed(1)+"%":"—"}</b></div>
         <div style="color:var(--ink-3);text-transform:uppercase;font-size:10px;letter-spacing:.06em;font-weight:700;">Max runup</div>
         <div><b style="color:var(--emerald-700)">${p.max_runup_pct!=null?"+"+p.max_runup_pct.toFixed(1)+"%":"—"}</b></div>
       </div>
@@ -2012,17 +2014,21 @@ function renderValidationReport({ticker, thesis, validation}) {
       <div class="body-text" style="font-size:13px;line-height:1.6;white-space:pre-wrap;">${esc(v.narrative || "")}</div>
     </div>`;
 
-  // Pillar reviews
-  const verdictClass = {held:"held", missed:"missed", too_loose:"too-loose", too_tight:"too-tight", untested:"untested"};
-  const pillarReviewsHtml = reviews.length ? reviews.map(r => `
+  // Reason reviews
+  const VERDICT_LABEL = {
+    held_up: "Held up", failed: "Failed",
+    set_too_low: "Set too low", set_too_high: "Set too high",
+    not_enough_data: "Not enough data",
+  };
+  const reasonReviewsHtml = reviews.length ? reviews.map(r => `
     <div class="card" style="padding: 12px 14px; margin-bottom: 8px;">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-        <span style="font-weight:700;font-size:13px;">${esc(r.pillar_name||"")}</span>
-        <span class="verdict ${esc(verdictClass[r.verdict]||"untested")}" style="margin-left:auto;">${esc(r.verdict||"?")}</span>
+        <span style="font-weight:700;font-size:13px;">${esc(r.reason_name||"")}</span>
+        <span class="verdict ${esc(r.verdict||"not_enough_data")}" style="margin-left:auto;">${esc(VERDICT_LABEL[r.verdict]||r.verdict||"?")}</span>
       </div>
-      <div class="body-text" style="font-size:13px;color:var(--ink-2);line-height:1.5;margin-bottom:${r.suggested_threshold_break?"6px":"0"};">${esc(r.evidence||"")}</div>
-      ${r.suggested_threshold_break ? `<div style="font-size:11px;color:var(--ink-3);"><b style="color:var(--ink);">Suggested threshold:</b> ${esc(r.suggested_threshold_break)}</div>` : ""}
-    </div>`).join("") : `<div class="empty-state">No pillar reviews returned.</div>`;
+      <div class="body-text" style="font-size:13px;color:var(--ink-2);line-height:1.5;margin-bottom:${r.suggested_walk_away_signal?"6px":"0"};">${esc(r.evidence||"")}</div>
+      ${r.suggested_walk_away_signal ? `<div style="font-size:11px;color:var(--ink-3);"><b style="color:var(--ink);">Suggested signal:</b> ${esc(r.suggested_walk_away_signal)}</div>` : ""}
+    </div>`).join("") : `<div class="empty-state">No reason reviews returned.</div>`;
 
   // Lessons
   const lessonsHtml = lessons.length ? `
@@ -2040,7 +2046,7 @@ function renderValidationReport({ticker, thesis, validation}) {
       <div style="font-size:12px;color:var(--ink-2);font-family:ui-monospace,monospace;">${changedFields.map(esc).join(", ")}</div>
     </div>` : `
     <div class="card" style="background:var(--emerald-50);border-color:#a7f3d0;">
-      <div class="body-text" style="margin:0;font-size:13px;color:var(--emerald-700);">No changes proposed — thesis looks well-calibrated.</div>
+      <div class="body-text" style="margin:0;font-size:13px;color:var(--emerald-700);">No changes proposed — plan looks well-calibrated.</div>
     </div>`;
 
   // Action row
@@ -2054,67 +2060,67 @@ function renderValidationReport({ticker, thesis, validation}) {
 
   document.getElementById("wizard-body").innerHTML =
     perfHtml + recHtml + narrativeHtml +
-    `<div class="section-label" style="margin:18px 0 8px;"><span class="title">Pillar reviews</span><span class="count">${reviews.length}</span></div>` +
-    pillarReviewsHtml +
+    `<div class="section-label" style="margin:18px 0 8px;"><span class="title">Reason reviews</span><span class="count">${reviews.length}</span></div>` +
+    reasonReviewsHtml +
     lessonsHtml +
     changesHtml +
     actionsHtml;
 
   document.getElementById("vreport-close").addEventListener("click", () => { wizardOverlay.style.display = "none"; });
-  document.getElementById("vreport-journal").addEventListener("click", () => saveValidationToJournal(thesis, validation));
+  document.getElementById("vreport-journal").addEventListener("click", () => saveReviewToJournal(plan, review));
   if (!applyDisabled) {
-    document.getElementById("vreport-apply").addEventListener("click", () => applyValidationUpdates(thesis, validation));
+    document.getElementById("vreport-apply").addEventListener("click", () => applyReviewUpdates(plan, review));
   }
 }
 
 function mergeProposedChanges(original, proposed) {
   const merged = JSON.parse(JSON.stringify(original));  // deep clone
-  if (proposed.conviction != null) merged.conviction = proposed.conviction;
-  if (proposed.time_horizon)       merged.time_horizon = proposed.time_horizon;
-  if (proposed.exit_plan)          merged.exit_plan = {...(merged.exit_plan||{}), ...proposed.exit_plan};
-  if (Array.isArray(proposed.pillars) && proposed.pillars.length) {
-    // Preserve watcher-driven status from the original; merge by pillar name.
-    const origByName = Object.fromEntries((merged.pillars||[]).map(p => [p.name, p]));
-    merged.pillars = proposed.pillars.map(p => {
-      const orig = origByName[p.name];
+  if (proposed.confidence != null)  merged.confidence = proposed.confidence;
+  if (proposed.time_horizon)        merged.time_horizon = proposed.time_horizon;
+  if (proposed.exit_triggers)       merged.exit_triggers = {...(merged.exit_triggers||{}), ...proposed.exit_triggers};
+  if (Array.isArray(proposed.reasons) && proposed.reasons.length) {
+    // Preserve watcher-driven status from the original; merge by reason name.
+    const origByName = Object.fromEntries((merged.reasons||[]).map(r => [r.name, r]));
+    merged.reasons = proposed.reasons.map(r => {
+      const orig = origByName[r.name];
       return {
-        name:            p.name,
-        current_value:   p.current_value   ?? orig?.current_value   ?? "",
-        threshold_break: p.threshold_break ?? orig?.threshold_break ?? "",
-        watch_signals:   Array.isArray(p.watch_signals) ? p.watch_signals : (orig?.watch_signals || []),
-        // Status comes from the watcher, NOT the validator. Never let the LLM override.
-        status: orig?.status || p.status || "intact",
+        name:             r.name,
+        current_value:    r.current_value    ?? orig?.current_value    ?? "",
+        walk_away_signal: r.walk_away_signal ?? orig?.walk_away_signal ?? "",
+        data_sources:     Array.isArray(r.data_sources) ? r.data_sources : (orig?.data_sources || []),
+        // Status comes from the watcher, NOT the reviewer. Never let the LLM override.
+        status: orig?.status || r.status || "on_track",
       };
     });
   }
   return merged;
 }
 
-function applyValidationUpdates(originalThesis, validation) {
-  const proposed = validation.proposed_changes || {};
-  const merged = mergeProposedChanges(originalThesis, proposed);
-  // Add journal entry recording the validation
+function applyReviewUpdates(originalPlan, review) {
+  const proposed = review.proposed_changes || {};
+  const merged = mergeProposedChanges(originalPlan, proposed);
+  // Add journal entry recording the review
   const today = new Date().toISOString().slice(0, 10);
-  const summary = (validation.narrative || "").split(/[.\n]/)[0].slice(0, 120);
-  const entry = `${today}: Thesis updated from validation (rec: ${validation.recommendation||"?"}). ${summary}`;
+  const summary = (review.narrative || "").split(/[.\n]/)[0].slice(0, 120);
+  const entry = `${today}: Plan updated from review (rec: ${review.recommendation||"?"}). ${summary}`;
   merged.journal = [...(merged.journal || []), entry];
-  // Open the existing review form pre-populated with the merged thesis
-  renderThesisReviewForm(merged);
+  // Open the existing review form pre-populated with the merged plan
+  renderPlanReviewForm(merged);
 }
 
-async function saveValidationToJournal(originalThesis, validation) {
+async function saveReviewToJournal(originalPlan, review) {
   const today = new Date().toISOString().slice(0, 10);
-  const summary = (validation.narrative || "").split(/[.\n]/)[0].slice(0, 140);
-  const entry = `${today}: Validation run — rec: ${validation.recommendation||"?"} (conf ${validation.confidence||"?"}). ${summary}`;
+  const summary = (review.narrative || "").split(/[.\n]/)[0].slice(0, 140);
+  const entry = `${today}: Review run — rec: ${review.recommendation||"?"} (conf ${review.confidence||"?"}). ${summary}`;
   const updated = {
-    ...originalThesis,
-    journal: [...(originalThesis.journal || []), entry],
+    ...originalPlan,
+    journal: [...(originalPlan.journal || []), entry],
     last_updated: new Date().toISOString(),
   };
   const btn = document.getElementById("vreport-journal");
   if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
   try {
-    const res = await fetch("/thesis/save", {
+    const res = await fetch("/plan/save", {
       method: "POST", headers: {"Content-Type": "application/json"},
       body: JSON.stringify({thesis: updated}),
     });
@@ -2124,7 +2130,7 @@ async function saveValidationToJournal(originalThesis, validation) {
     showToast("Validation saved to journal ✓");
     await loadPortfolio();
     // Re-render detail if currently shown
-    const item = _data?.items?.find(i => i.thesis.ticker === originalThesis.ticker);
+    const item = _data?.items?.find(i => i.plan.ticker === originalPlan.ticker);
     if (item) renderDetail(item);
   } catch (e) {
     if (btn) { btn.disabled = false; btn.textContent = "Save report to journal only"; }

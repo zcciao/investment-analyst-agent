@@ -1,16 +1,16 @@
-"""Linear 3-node LangGraph for thesis back-check / validation.
+"""Linear 3-node LangGraph for plan back-check / review.
 
 Graph layout:
     START → gather_node → analyze_node → done_node → END
 
 gather_node    — pull historical price, current quote, financials, news,
-                 watcher alerts for this thesis. Concurrent fetch.
+                 watcher alerts for this plan. Concurrent fetch.
 analyze_node   — single strong-model LLM call that produces a structured
-                 validation report (narrative + per-pillar verdicts +
-                 proposed thesis updates).
+                 review report (narrative + per-reason verdicts +
+                 proposed plan updates).
 done_node      — finalize: defaults missing fields, marks complete.
 
-Mirrors the shape of agent/thesis_builder.py so the same SSE pattern in
+Mirrors the shape of agent/plan_builder.py so the same SSE pattern in
 server.app applies. No checkpointer.
 """
 
@@ -19,18 +19,16 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 from datetime import datetime, timezone
 from functools import lru_cache
 from typing import TypedDict
 
-from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 
-from agent.prompts import THESIS_VALIDATE_PROMPT
-from agent.thesis_store import Thesis, get_thesis
+from agent._llm import build_llm, extract_text, strip_fences
+from agent.prompts import PLAN_REVIEW_PROMPT
+from agent.plan_store import Plan, get_plan
 from agent.tools import (
     get_financials_snapshot,
     get_price_history,
@@ -39,16 +37,16 @@ from agent.tools import (
 )
 from watcher.alerts import list_alerts
 
-log = logging.getLogger("thesis_validator")
+log = logging.getLogger("plan_reviewer")
 
 
 # ---------------------------------------------------------------------------
 # State
 # ---------------------------------------------------------------------------
 
-class ThesisValidateState(TypedDict):
+class PlanReviewState(TypedDict):
     ticker: str
-    thesis: dict
+    plan: dict
     # gathered
     quote: dict
     history: dict
@@ -56,44 +54,14 @@ class ThesisValidateState(TypedDict):
     news: list
     alerts: list
     # output
-    validation: dict
+    review: dict
     error: str | None
     steps_completed: list
 
 
 # ---------------------------------------------------------------------------
-# LLM
+# Helpers
 # ---------------------------------------------------------------------------
-
-def _build_plain_llm():
-    provider = os.getenv("PROVIDER", "anthropic").lower()
-    if provider == "gemini":
-        model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-        return ChatGoogleGenerativeAI(model=model, temperature=0)
-    model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
-    return ChatAnthropic(model=model, temperature=0)
-
-
-def _strip_fences(raw: str) -> str:
-    raw = raw.strip()
-    if raw.startswith("```"):
-        parts = raw.split("```")
-        inner = parts[1] if len(parts) > 1 else raw
-        if inner.startswith("json"):
-            inner = inner[4:]
-        return inner.strip()
-    return raw
-
-
-def _extract_text(content) -> str:
-    if isinstance(content, str):
-        return content
-    if isinstance(content, list):
-        return "".join(
-            b.get("text", "") if isinstance(b, dict) else str(b) for b in content
-        )
-    return ""
-
 
 def _pick_period(entry_date: str | None) -> str:
     """Choose a yfinance period covering the holding window with some margin."""
@@ -115,11 +83,11 @@ def _pick_period(entry_date: str | None) -> str:
 # Nodes
 # ---------------------------------------------------------------------------
 
-async def gather_node(state: ThesisValidateState) -> dict:
-    """Pull all the data needed to back-check the thesis."""
+async def gather_node(state: PlanReviewState) -> dict:
+    """Pull all the data needed to back-check the plan."""
     ticker = state["ticker"]
-    thesis = state["thesis"]
-    period = _pick_period(thesis.get("entry_date"))
+    plan = state["plan"]
+    period = _pick_period(plan.get("entry_date"))
 
     quote, history, fins, news = await asyncio.gather(
         asyncio.to_thread(get_stock_quote.func, ticker=ticker),
@@ -127,7 +95,6 @@ async def gather_node(state: ThesisValidateState) -> dict:
         asyncio.to_thread(get_financials_snapshot.func, ticker=ticker),
         asyncio.to_thread(get_recent_news.func, ticker=ticker, limit=15),
     )
-    # Alerts are local — no need for to_thread but keep symmetry cheap.
     raw_alerts = list_alerts(unread_only=False)
     alerts = [a.model_dump() for a in raw_alerts if a.ticker == ticker][:20]
 
@@ -145,55 +112,54 @@ async def gather_node(state: ThesisValidateState) -> dict:
     }
 
 
-def analyze_node(state: ThesisValidateState) -> dict:
-    """LLM produces the validation report."""
-    thesis = state["thesis"]
-    prompt = THESIS_VALIDATE_PROMPT.format(
-        thesis_json=json.dumps(thesis, indent=2, default=str),
+def analyze_node(state: PlanReviewState) -> dict:
+    """LLM produces the review report."""
+    plan = state["plan"]
+    prompt = PLAN_REVIEW_PROMPT.format(
+        plan_json=json.dumps(plan, indent=2, default=str),
         history_json=json.dumps(state["history"], indent=2, default=str),
         quote_json=json.dumps(state["quote"], indent=2, default=str),
         financials_json=json.dumps(state["financials"], indent=2, default=str),
         news_json=json.dumps(state["news"], indent=2, default=str),
         alerts_json=json.dumps(state["alerts"], indent=2, default=str),
-        journal_json=json.dumps(thesis.get("journal", []), indent=2, default=str),
+        journal_json=json.dumps(plan.get("journal", []), indent=2, default=str),
     )
-    llm = _build_plain_llm()
+    llm = build_llm("plain")
     response = llm.invoke([HumanMessage(content=prompt)])
-    raw = _strip_fences(_extract_text(response.content))
+    raw = strip_fences(extract_text(response.content))
     try:
-        validation = json.loads(raw)
+        review = json.loads(raw)
     except json.JSONDecodeError as e:
         log.error("analyze_node: JSON parse failed: %s\nraw=%s", e, raw[:500])
         return {
-            "error": f"Validator returned non-JSON: {raw[:200]}",
+            "error": f"Reviewer returned non-JSON: {raw[:200]}",
             "steps_completed": state["steps_completed"] + ["analyze"],
         }
     log.info(
-        "analyze_node: rec=%s pillar_reviews=%d changed=%s",
-        validation.get("recommendation"),
-        len(validation.get("pillar_reviews", []) or []),
-        validation.get("proposed_changes", {}).get("changed_fields"),
+        "analyze_node: rec=%s reason_reviews=%d changed=%s",
+        review.get("recommendation"),
+        len(review.get("reason_reviews", []) or []),
+        review.get("proposed_changes", {}).get("changed_fields"),
     )
     return {
-        "validation": validation,
+        "review": review,
         "steps_completed": state["steps_completed"] + ["analyze"],
     }
 
 
-def done_node(state: ThesisValidateState) -> dict:
+def done_node(state: PlanReviewState) -> dict:
     """Finalize: default any missing fields so the frontend can render."""
-    v = state.get("validation") or {}
-    # Soft defaults — never abort on missing fields
+    v = state.get("review") or {}
     v.setdefault("narrative", "")
     v.setdefault("performance_summary", {})
-    v.setdefault("pillar_reviews", [])
+    v.setdefault("reason_reviews", [])
     v.setdefault("lessons", [])
     v.setdefault("proposed_changes", {"changed_fields": []})
     v["proposed_changes"].setdefault("changed_fields", [])
     v.setdefault("recommendation", "watch")
     v.setdefault("confidence", 5)
     return {
-        "validation": v,
+        "review": v,
         "steps_completed": state["steps_completed"] + ["done"],
     }
 
@@ -202,12 +168,12 @@ def done_node(state: ThesisValidateState) -> dict:
 # Graph
 # ---------------------------------------------------------------------------
 
-def _continue_or_abort(state: ThesisValidateState) -> str:
+def _continue_or_abort(state: PlanReviewState) -> str:
     return "__end__" if state.get("error") else "done_node"
 
 
-def build_validate_graph():
-    g = StateGraph(ThesisValidateState)
+def build_review_graph():
+    g = StateGraph(PlanReviewState)
     g.add_node("gather_node", gather_node)
     g.add_node("analyze_node", analyze_node)
     g.add_node("done_node", done_node)
@@ -224,8 +190,8 @@ def build_validate_graph():
 
 
 @lru_cache(maxsize=1)
-def get_validate_graph():
-    return build_validate_graph()
+def get_review_graph():
+    return build_review_graph()
 
 
 # ---------------------------------------------------------------------------
@@ -233,15 +199,15 @@ def get_validate_graph():
 # ---------------------------------------------------------------------------
 
 def initial_state_for(ticker: str) -> dict | None:
-    """Build the initial graph state. Returns None if thesis doesn't exist."""
-    t = get_thesis(ticker)
+    """Build the initial graph state. Returns None if plan doesn't exist."""
+    t = get_plan(ticker)
     if t is None:
         return None
     return {
         "ticker": ticker.upper(),
-        "thesis": t.model_dump(),
+        "plan": t.model_dump(),
         "quote": {}, "history": {}, "financials": {}, "news": [], "alerts": [],
-        "validation": {},
+        "review": {},
         "error": None,
         "steps_completed": [],
     }

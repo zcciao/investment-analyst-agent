@@ -1,30 +1,40 @@
 # Investment Analyst — PoC
 
-A small but production-shaped skeleton for the personal investment AI
-described in `investment_ai_one_pager.md`. One agent (the **Analyst**),
-two pluggable tool families (market data + thesis lookup), a FastAPI
-server, and a single-file HTML chat UI with token streaming.
+A small but production-shaped skeleton for the personal investment AI described in [`investment_ai_one_pager.md`](./investment_ai_one_pager.md). Four agents share the work; one FastAPI server stitches them together; one HTML file is the UI.
+
+If any of the vocabulary below looks unfamiliar (plan, reason, walk-away signal, on_track / at_risk / off_track / ahead), see [`GLOSSARY.md`](./GLOSSARY.md).
+
+---
 
 ## What's here
 
 ```
 .
 ├── agent/
-│   ├── graph.py          # LangGraph: agent ↔ tools loop, with checkpointer
-│   ├── tools.py          # @tool functions: quote / info / financials / news / theses
-│   ├── thesis_store.py   # Pydantic Thesis model + JSON file store
-│   └── prompts.py        # System prompts (shared ground rules + Analyst)
+│   ├── graph.py            # LangGraph: Analyst chat loop (agent ↔ tools)
+│   ├── plan_builder.py     # LangGraph: build a Plan from raw notes (draft→research→refine→done)
+│   ├── plan_reviewer.py    # LangGraph: back-check a Plan against history (gather→analyze→done)
+│   ├── plan_store.py       # Pydantic Plan/Reason/Event models + JSON store + migration
+│   ├── prompts.py          # System prompts: Analyst, plan-builder, plan-reviewer
+│   └── tools.py            # @tool functions: yfinance quote/info/financials/news/history + plan lookup
+├── watcher/
+│   ├── engine.py           # Per-reason status checks against current data + recent news
+│   ├── alerts.py           # Append-only alert log (data/alerts.json)
+│   └── runs.py             # Per-run summary log (data/watcher_runs.json)
 ├── server/
-│   └── app.py            # FastAPI; POST /chat streams via SSE
+│   └── app.py              # FastAPI: SSE streaming for chat, plan-build, plan-review, watcher
 ├── static/
-│   └── index.html        # Minimal chat UI, no build step
+│   └── index.html          # Mobile-first single-file UI: Briefing / Plans / Ask / You
 ├── data/
-│   └── theses.json       # Seed thesis (GOOG) — edit freely
+│   ├── plans.json          # Plans keyed by ticker
+│   ├── alerts.json         # Watcher alerts (status changes)
+│   └── watcher_runs.json   # Watcher run history
 ├── tests/
-│   └── smoke_test.py     # No-network structural test
+│   └── smoke_test.py       # No-network structural test
+├── design/                 # UI mockups (history; not used by code)
 ├── requirements.txt
-├── .env.example
-└── investment_ai_one_pager.md   # the strategic vision
+├── GLOSSARY.md             # Vocabulary + old↔new term map
+└── investment_ai_one_pager.md
 ```
 
 ## Run it
@@ -32,100 +42,95 @@ server, and a single-file HTML chat UI with token streaming.
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env            # then put your ANTHROPIC_API_KEY in .env
+cp .env.example .env            # set ANTHROPIC_API_KEY or GOOGLE_API_KEY
 python -m tests.smoke_test      # should print PASS
 python -m server.app            # opens http://127.0.0.1:8000
 ```
 
-Try these in the UI:
-- "What positions am I tracking?"
-- "What's up with GOOG?" — pulls quote + news, and surfaces your GOOG
-  thesis pillars; flags wobbling ones.
-- "Give me a fundamentals snapshot of MSFT"
+Pick your provider via `PROVIDER=anthropic` (default) or `PROVIDER=gemini` in `.env`.
 
-The UI streams tokens, and renders each tool call/result inline so you
-can see *why* the model said what it said — important when the
-landmine is hallucinated numbers.
+Try in the UI:
+- **Briefing** — daily digest; tap any alert card to drill in
+- **Plans** — list of every plan; filter chips for issues / at risk / events / ahead
+- **Plan detail** — price chart, reasons with status, timeline, and the action row (Review / Refresh checks / Ask / Edit)
+- **Ask** — chat with the Analyst; try *"What's up with GOOG?"* or *"Bear case on my at-risk positions"*
+- **You** → **Glossary** — in-app version of `GLOSSARY.md`
 
-## How the graph works
+Tokens stream live, and every tool call / result is rendered inline so you can see *why* the model said what it said — important when the failure mode is hallucinated numbers.
 
-```
-START → agent ──tool_calls?── tools → agent → … → END
-```
+---
 
-`agent/graph.py` defines:
-- `MessagesState` — built-in state with a `messages` list reduced via
-  `add_messages`. This is the conversation history.
-- `agent` node — calls Claude with the system prompt + history + bound tools.
-- `tools` node — `ToolNode(ALL_TOOLS)` dispatches the model's tool calls.
-- `_should_continue` — routes to `tools` if the LLM emitted tool calls,
-  otherwise to `END`.
-- `MemorySaver` checkpointer — keyed by `thread_id`, so the UI's stable
-  `thread_id` (stored in `localStorage`) keeps history across turns.
+## The four agents
 
-Swap `MemorySaver` for `SqliteSaver` / `PostgresSaver` to persist threads.
+| Agent | Lives in | When it runs | What it does |
+|---|---|---|---|
+| 🔭 **Watcher** | `watcher/engine.py` | Daily cron (set `WATCHER_HOUR`) + on-demand via UI | Forward-looking. Evaluates each reason's status against current data. Emits alerts on status changes. |
+| 🔬 **Analyst** | `agent/graph.py` | Per chat turn | Conversational. Pulls live data, explains plan state, nudges revision on `off_track` / `ahead`. The only agent with thread state. |
+| 🩺 **Reviewer** | `agent/plan_reviewer.py` | On-demand (Plan detail → 🔍 *Review this plan*) | Backward-looking. Pulls price history + fundamentals, grades reasons (`held_up / failed / set_too_low / set_too_high / not_enough_data`), proposes structured updates the user can apply. |
+| 🛡️ **Supervisor** | _not yet implemented_ | Per Analyst output | Quality gate before any agent-proposed change touches the Plan store. Today the user is effectively the supervisor for Reviewer-proposed updates. |
 
-## Extending toward the four-agent vision
+A new plan is built via a 4th LangGraph in `agent/plan_builder.py` (paste notes → AI extracts reasons → you accept/edit).
 
-The one-pager describes Watcher / Analyst / Challenger / Coach. Here's
-the minimum-rewrite path from this skeleton:
+---
 
-| Agent | How to add |
+## API surface
+
+| Route | What it does |
 |---|---|
-| **Watcher** | A scheduled script (cron, APScheduler, or LangGraph's `interrupt`) that calls a small model over each thesis's `watch_signals` and writes candidates to a queue. It's a *separate process*, not a node in this graph. |
-| **Challenger** | Add a `challenger` node parallel to `agent`, with its own bear-case system prompt and a higher-quality model. Route to it from a behavior trigger ("user is adding to a position with wobbly pillars"). |
-| **Coach** | Weekly job that reads journal entries + trades and writes a digest. Closer to a batch tool than an interactive agent. |
+| `GET /` | Static UI |
+| `GET /health` | Provider + model |
+| `POST /chat` | Analyst chat (SSE: `token` / `tool_call` / `tool_result` / `done` / `error`) |
+| `POST /plan/build` | Plan-builder SSE (`step_start` / `step_done` / `plan_ready` / `done`) |
+| `POST /plan/{ticker}/review` | Reviewer SSE (`step_start` / `step_done` / `review_ready` / `done`) |
+| `GET  /plan/{ticker}` | Price history + recent news |
+| `GET  /plans` | All plans + quotes + P&L |
+| `POST /plan/save` | Upsert a plan |
+| `POST /watcher/run` | Run watcher across all plans |
+| `POST /watcher/run/{ticker}` | Run watcher for one plan |
+| `GET  /watcher/alerts` | Alert log (`?unread_only=true` to filter) |
+| `POST /watcher/alerts/read` | Mark alerts read |
+| `GET  /watcher/runs` | Recent run summaries |
+| `GET  /watcher/status` | Last run summary |
 
-The thesis object in `agent/thesis_store.py` is the spine that all
-four agents share — keep that schema stable as you add agents.
+---
 
-## Tools
+## Data model
 
-Market data uses **yfinance** (no API key, somewhat flaky, fine for PoC):
-- `get_stock_quote(ticker)` — last price, day range, 52w range, market cap
-- `get_company_info(ticker)` — name, sector, industry, business summary
-- `get_financials_snapshot(ticker)` — latest income statement + key ratios
-- `get_recent_news(ticker, limit)` — headlines
+`agent/plan_store.py` is the spine — every agent reads from or writes through it. The Pydantic models match `data/plans.json` 1:1 (see `GLOSSARY.md` for field-by-field meaning).
 
-Thesis tools read from `data/theses.json`:
-- `list_theses()` — summary of every thesis on file
-- `get_thesis(ticker)` — full thesis object including pillars and threshold_break
-
-When you outgrow yfinance: drop in Polygon, FMP, or Alpha Vantage by
-adding a new file in `agent/` that exposes the same `@tool` interface,
-then add the tools to `ALL_TOOLS`.
+On startup, `_migrate_if_needed()` rewrites legacy `data/theses.json` (and old field names like `pillars` / `threshold_break` / `intact`) into the current schema. Idempotent; safe on every boot.
 
 ## Streaming protocol
 
-`POST /chat` returns Server-Sent Events:
+All long-running endpoints stream Server-Sent Events:
 
-| Event | Payload | Meaning |
+| Event | Payload | Used by |
 |---|---|---|
-| `token` | `{text}` | Assistant text delta |
-| `tool_call` | `{name, args}` | Model decided to call a tool |
-| `tool_result` | `{name, result}` | Tool returned (truncated to 4 KB) |
-| `done` | `{}` | Turn complete |
-| `error` | `{message}` | Something failed |
+| `token` | `{text}` | `/chat` |
+| `tool_call` | `{name, args}` | `/chat` |
+| `tool_result` | `{name, result}` | `/chat` |
+| `step_start` | `{step}` | `/plan/build`, `/plan/{t}/review` |
+| `step_done` | `{step, data}` | `/plan/build`, `/plan/{t}/review` |
+| `plan_ready` | `{plan}` | `/plan/build` |
+| `review_ready` | `{ticker, plan, review}` | `/plan/{t}/review` |
+| `done` | `{}` | all |
+| `error` | `{message}` | all |
 
-The UI uses `fetch()` + a streaming reader (rather than `EventSource`)
-so it can POST a body. See `static/index.html` → `readSSE`.
+The UI uses `fetch()` + a streaming reader (so it can POST a body). See `static/index.html` → `readSSE`.
+
+---
 
 ## What's intentionally NOT here
 
-- No real Watcher loop — that needs a scheduler and is out of scope for a skeleton.
-- No auth — single-user, localhost only.
-- No persistence beyond the JSON thesis file — `MemorySaver` is in-process.
-- No bull/bear debate orchestration — that's the Challenger work.
-- No tests beyond the structural smoke test — adding behavioral evals
-  is the natural next step before any production push.
+- **No Supervisor loop yet** — Watcher status changes commit directly. The plan is to wire Analyst-proposed changes through a Supervisor quality gate before they touch the Plan store.
+- **No push channel** — Trigger/Push to email or native push is the natural follow-up to Supervisor.
+- **No auth** — single-user, localhost / LAN only.
+- **No real database** — JSON files are fine at PoC scale. Replace once schema stabilizes.
+- **No behavioral evals** — only the structural smoke test (`tests/smoke_test.py`). Behavioral evals are the right thing to add before any production push.
 
-## Known landmines (from the one-pager, transferred into code)
+## Landmines (from the one-pager, transferred into code)
 
-- **Hallucinated numbers** → `prompts.py` instructs Claude to refuse if
-  it doesn't have a tool result for a number. Verify this holds in
-  your evals.
-- **Cost runaway** → keep `temperature=0` and the tool list short. The
-  Watcher (when added) must use a cheap model and pre-filter.
-- **Privacy** → `data/theses.json` is gitignored under `*.local.json`;
-  rename your real thesis file to `theses.local.json` once you stop
-  wanting to commit it.
+- **Hallucinated numbers** → `agent/prompts.py` instructs the LLM to refuse if it doesn't have a tool result for a number. Verify this in evals.
+- **Cost runaway** → watcher uses `WATCHER_MODEL` (cheap by default) and pre-filters before LLM calls. Reviewer is on-demand only.
+- **Push fatigue** → not yet relevant; will be once `Trigger/Push` ships. Bar for interrupting > bar for committing to the Plan store.
+- **Privacy** → `data/*.json` is your real portfolio. Keep `data/` out of any public repo before productizing.

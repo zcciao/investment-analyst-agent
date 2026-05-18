@@ -20,7 +20,7 @@ _ALERTS_PATH = Path(__file__).resolve().parent.parent / "data" / "alerts.json"
 class Alert(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     ticker: str
-    pillar_name: str
+    reason_name: str
     old_status: str
     new_status: str
     reasoning: str

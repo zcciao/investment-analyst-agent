@@ -20,7 +20,7 @@ import yfinance as yf
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
-from agent import thesis_store
+from agent import plan_store
 
 log = logging.getLogger(__name__)
 
@@ -257,37 +257,37 @@ def get_recent_news(ticker: str, limit: int = 5) -> list[dict[str, Any]]:
 
 
 # --------------------------------------------------------------------------- #
-# Thesis tools
+# Plan tools
 # --------------------------------------------------------------------------- #
 
-@tool("list_theses")
-def list_theses_tool() -> list[dict[str, Any]]:
-    """List every thesis the user has on file (one summary line each).
+@tool("list_plans")
+def list_plans_tool() -> list[dict[str, Any]]:
+    """List every plan the user has on file (one summary line each).
 
     Use this when the user asks "what positions am I tracking" or before
-    you discuss a ticker, so you know whether they have a thesis on it.
+    you discuss a ticker, so you know whether they have a plan on it.
     """
     return [
         {
-            "ticker": t.ticker,
-            "one_liner": t.one_liner,
-            "conviction": t.conviction,
-            "time_horizon": t.time_horizon,
-            "pillar_count": len(t.pillars),
-            "any_wobbling": any(p.status in ("wobbling", "broken") for p in t.pillars),
+            "ticker": p.ticker,
+            "one_liner": p.one_liner,
+            "confidence": p.confidence,
+            "time_horizon": p.time_horizon,
+            "reason_count": len(p.reasons),
+            "any_at_risk": any(r.status in ("at_risk", "off_track") for r in p.reasons),
         }
-        for t in thesis_store.list_theses()
+        for p in plan_store.list_plans()
     ]
 
 
-@tool("get_thesis", args_schema=TickerArg)
-def get_thesis_tool(ticker: str) -> dict[str, Any] | None:
-    """Get the full thesis for a ticker, including all pillars and their
-    threshold_break conditions. Use this whenever the user asks about a
-    ticker they have a thesis on.
+@tool("get_plan", args_schema=TickerArg)
+def get_plan_tool(ticker: str) -> dict[str, Any] | None:
+    """Get the full plan for a ticker, including all reasons and their
+    walk-away signals. Use this whenever the user asks about a ticker
+    they have a plan on.
     """
-    t = thesis_store.get_thesis(ticker)
-    return t.model_dump() if t else {"error": f"No thesis on file for {ticker}."}
+    p = plan_store.get_plan(ticker)
+    return p.model_dump() if p else {"error": f"No plan on file for {ticker}."}
 
 
 # --------------------------------------------------------------------------- #
@@ -299,6 +299,6 @@ ALL_TOOLS = [
     get_company_info,
     get_financials_snapshot,
     get_recent_news,
-    list_theses_tool,
-    get_thesis_tool,
+    list_plans_tool,
+    get_plan_tool,
 ]

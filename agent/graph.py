@@ -1,9 +1,9 @@
 """LangGraph definition for the Analyst agent.
 
 The graph is intentionally minimal: a single ReAct-style loop with
-Anthropic + tool calling. The shape is set up so that the eventual
-Watcher / Challenger / Coach agents from the one-pager can be added as
-sibling nodes with a router on top, without rewriting this file.
+tool calling (Anthropic or Gemini, picked by the `PROVIDER` env var).
+The Watcher, Reviewer, and (future) Supervisor each live in their own
+modules — this file is just the Analyst's chat loop.
 
 Layout::
 
